@@ -14,7 +14,7 @@
 >---
 >>- **index** : 2
 >>- **date** : 17/04/2024
->>- **summary** : 
+>>- **summary** : \
     &nbsp;*1.* read paper "Fact-Checking Meets Fauxtography: Verifying Claims About Images" \
     &nbsp;*2.* download the dataset Fauxtography ---- **can't unzip** \
 >>- **note** : \
