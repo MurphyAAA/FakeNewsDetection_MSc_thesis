@@ -11,8 +11,19 @@
     &nbsp;*2.source:* reddit(22 subreddits) \
     &nbsp;*3.labels:* 2-label(T/F) / 3-label(T/F/fake & contain true text) / 6-label( T/ F&Satire,Parody / F&Misleading Context / Manipulated Content / F&False Connection / F&Imposter Content) \
     &nbsp;*4.lab:* use models: FastText, LangID, langdetext to predict label of languages 
-
+>---
 >>- **index** : 2
 >>- **date** : 17/04/2024
 >>- **summary** : 
->>- **note** : 
+    &nbsp;*1.* read paper "Fact-Checking Meets Fauxtography: Verifying Claims About Images" \
+    &nbsp;*2.* download the dataset Fauxtography ---- **can't unzip** \
+>>- **note** : \
+    &nbsp;*1.Fauxtography:* comes from two sources: **The snopes**, **The Reuters** \
+    &nbsp;*2.Features:* 13 from "Google tags","URL domains", "URL categories", "True/False/Mixed media percentage", "Known media percentage", "True/False/Mixed media titles"
+>>
+>>| name | data type | label | size|
+>>|---|---|---|---|
+>>|The Snopes Dataset  | image-text pair | True/Fake | 197 True + 641 Fake|
+>>|The Reuters Dataset | image-text pair | True only | 395 True|
+>---
+
