@@ -19,11 +19,13 @@
     &nbsp;*2.* download the dataset Fauxtography ---- **can't unzip** \
 >>- **note** : \
     &nbsp;*1.Fauxtography:* comes from two sources: **The snopes**, **The Reuters** \
-    &nbsp;*2.Features:* 13 from "Google tags","URL domains", "URL categories", "True/False/Mixed media percentage", "Known media percentage", "True/False/Mixed media titles"
+    &nbsp;*2.Features:* 13 from "Google tags","URL domains", "URL categories", "True/False/Mixed media percentage", "Known media percentage", "True/False/Mixed media titles"\
+    &nbsp;*3.lab:* use Natural Language Toolkit(nltk), spacy to count word token 
 >>
 >>| name | data type | label | size|
 >>|---|---|---|---|
 >>|The Snopes Dataset  | image-text pair | True/Fake | 197 True + 641 Fake|
 >>|The Reuters Dataset | image-text pair | True only | 395 True|
+
 >---
 
