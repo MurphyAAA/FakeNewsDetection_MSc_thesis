@@ -26,6 +26,12 @@
 >>|---|---|---|---|
 >>|The Snopes Dataset  | image-text pair | True/Fake | 197 True + 641 Fake|
 >>|The Reuters Dataset | image-text pair | True only | 395 True|
-
 >---
-
+>>- **index** : 3
+>>- **date** : 18/04/2024
+>>- **summary** : \
+    &nbsp;*1.* read paper "Text Image-CNN" 
+>>- **note** : \
+    &nbsp;*1.* Deception detection: Scientific fraud, fake news, false tweets...
+    &nbsp;*2.* Sove deception detection approaches: 1.linguistic approach(NLP techniques) 2. network appriach(analyze the network structure and behaviors) 3.Neural Network
+    
