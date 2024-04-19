@@ -34,4 +34,21 @@
 >>- **note** : \
     &nbsp;*1.* Deception detection: Scientific fraud, fake news, false tweets...
     &nbsp;*2.* Sove deception detection approaches: 1.linguistic approach(NLP techniques) 2. network appriach(analyze the network structure and behaviors) 3.Neural Network
-    
+>---
+>>- **index** : 4
+>>- **date** : 19/04/2024
+>>- **summary** : \
+    &nbsp;*1.* read paper "Text Image-CNN" 
+    &nbsp;*2.* download the dataset
+>>- **note** : \
+    &nbsp;*1.Dataset:* 20,015 samples= 11,941 fake+8074 true;\
+    &nbsp;*2.source:* **Fake news**: more than 240 websites on Kaggle; **True news**: well known news websites\
+    &nbsp;*3.Features:* Text/Image -> explicit features + latent features\
+    &nbsp;*4.:*
+>>
+>>|type|explicit features|latent features|
+>>|---|---|---|
+>>|Text|derived from the statistic of the news text|extract the word-level embedding by CNN |
+>>|Image|extract the resolution, number of faces...| CNN|
+
+
