@@ -50,5 +50,18 @@
 >>|---|---|---|
 >>|Text|derived from the statistic of the news text|extract the word-level embedding by CNN |
 >>|Image|extract the resolution, number of faces...| CNN|
+>---
+>>- **index** : 5
+>>- **date** : 20/04/2024
+>>- **summary** : \
+    &nbsp;*1.* read paper "Detection and visualization of misleading content on Twitter" 
+    &nbsp;*2.* download the dataset
+>>- **note** : \
+    &nbsp;*1.:* Two-step classification model based on a novel semi-supervised learning scheme\
+    &nbsp;*2.:* the result of first 2 classifier will be used to tune the second layer\
+    &nbsp;*3.Features:* extract tweet-based and user-based features, one of them will be used in one of 2 classifiers in first layer, then combine these two results\
+    &nbsp;*4.:*
+
+
 
 
