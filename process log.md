@@ -60,7 +60,24 @@
     &nbsp;*1.:* Two-step classification model based on a novel semi-supervised learning scheme\
     &nbsp;*2.:* the result of first 2 classifier will be used to tune the second layer\
     &nbsp;*3.Features:* extract tweet-based and user-based features, one of them will be used in one of 2 classifiers in first layer, then combine these two results\
-    &nbsp;*4.:*
+>---
+>>- **index** : 6
+>>- **date** : 22/04/2024
+>>- **summary** : \
+    &nbsp;*1.* read paper "Detection and visualization of misleading content on Twitter" 
+>>- **note** : \
+>---
+>>- **index** : 7
+>>- **date** : 23/04/2024
+>>- **summary** : \
+    &nbsp;*1.* read paper "Bert" 
+>>- **note** : \
+    &nbsp;*1.* Bert (refers to **B**idirectional **E**ncoder **R**epresentations from **T**ransformers) is base on ELMo and GPT. ELMo use RNN but Bert is based on Transformer which means ELMo needs more modifications of architecture on the subtask, but only small adjust on the top-level is needed for Bert(same as GPT), as well as, GPT is unidirectional, Bert can process the text in left-to-right and right-to-left by introduce MLM(masked LM).
+    &nbsp;*2.* Bert is a pre-trained model, it can be transfer to the down-stream task with fine-tuning
+    &nbsp;*3.* Firstly, pretraining ono the large unlabeled dataset, secondly, fine-tuning on a specific labeled dataset.
+    &nbsp;*4.* There are two task in pre-taining: task 1: MLM, task 2:NSP(next sentence): determine whether two sentences are randomly sampled or adjacent to the original text, and learn sentence-level information, the input is a **sentence pair** so both task can help Bert learn bidirectional information.
+
+        
 
 
 
