@@ -76,6 +76,15 @@
     &nbsp;*2.* Bert is a pre-trained model, it can be transfer to the down-stream task with fine-tuning
     &nbsp;*3.* Firstly, pretraining ono the large unlabeled dataset, secondly, fine-tuning on a specific labeled dataset.
     &nbsp;*4.* There are two task in pre-taining: task 1: MLM, task 2:NSP(next sentence): determine whether two sentences are randomly sampled or adjacent to the original text, and learn sentence-level information, the input is a **sentence pair** so both task can help Bert learn bidirectional information.
+>---
+>>- **index** : 8
+>>- **date** : 24/04/2024
+>>- **summary** : \
+    &nbsp;*1.* learning the Fakeddit dataset \
+    &nbsp;*2.* learning Bert\
+    &nbsp;*3.* coding
+>>- 
+>>- **note** : \
 
         
 
