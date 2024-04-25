@@ -10,12 +10,14 @@ import torch
 def parse_arguments():
     parse = argparse.ArgumentParser()
 
-    parse.add_argument('--lr', type=float, default=1e-05, help='Learning rate.')
-    parse.add_argument('--num_epochs', type=int, default=1, help='Number of training epochs.')
+    #hyperparams
+    parse.add_argument('--lr', type=float, default=5e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
+    parse.add_argument('--num_epochs', type=int, default=1, help='Number of training epochs.') # 3
     parse.add_argument('--batch_size', type=int, default=32)
-    parse.add_argument('--num_workers', type=int, default=1)
-    parse.add_argument('--max_len', type=int, default=200) # 文本的最大长度
 
+    parse.add_argument('--num_workers', type=int, default=1)
+    parse.add_argument('--max_len', type=int, default=100) # 文本的最大长度
+    parse.add_argument('--print_every', type=int, default=50)
     parse.add_argument('--data_path', type=str, default='data/Fakeddit', help='Locate the Fakeddit dataset on disk.')
 
 

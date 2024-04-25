@@ -41,15 +41,18 @@ class CustomDataset(Dataset):
         return len(self.text)
 
     def __getitem__(self, index): # 构建dataloader的时候用
-
+        text = str(self.text[index])
+        text = " ".join(text.split())
         inputs = self.tokenizer(
-            self.text,
+            text,
             None,
             add_special_tokens=True,
             max_length=self.max_len,
-            pad_to_max_length=True,
-            return_token_type_ids=True
+            padding="max_length",
+            return_token_type_ids=True,
+            truncation=True
         )
+        # 有个问题，text长度不均匀，都padding了浪费资源，怎么能长度不一致也能训练？
         ids = inputs['input_ids']
         mask = inputs['attention_mask']
         token_type_ids = inputs["token_type_ids"]
@@ -58,7 +61,7 @@ class CustomDataset(Dataset):
             'ids': torch.tensor(ids, dtype=torch.long),
             'mask': torch.tensor(mask, dtype=torch.long),
             'token_type_ids': torch.tensor(token_type_ids, dtype=torch.long),
-            'targets': torch.tensor(self.targets[index], dtype=torch.float)
+            'label': torch.tensor(self.label[index], dtype=torch.long)
         }
 def read_file(data_path,filename):
     df = pd.read_csv(f'{data_path}/{filename}.tsv', delimiter='\t')
@@ -88,6 +91,15 @@ def build_dataloader(opt):
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
     print(f'testing set:{df_test.shape}')
+    # maxlen=0
+    # totlen=0
+    # for text in df_train["clean_title"]: #看一下text的最大长度
+    #     totlen+=len(text.split())
+    #     if len(text.split())> maxlen:
+    #         maxlen = len(text.split())
+    # print(f'max text len:{maxlen}, avg text len:{totlen/df_train.shape[0]}')
+    # train max len: 553 words, avg len: 7.5 words # 有个问题，text长度不均匀，都padding了浪费资源，怎么能长度不一致也能训练？ ????????
+
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
     train_set = CustomDataset(df_train, tokenizer, opt['max_len'])
