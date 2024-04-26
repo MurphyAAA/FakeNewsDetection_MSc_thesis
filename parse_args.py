@@ -18,6 +18,8 @@ def parse_arguments():
     parse.add_argument('--num_workers', type=int, default=1)
     parse.add_argument('--max_len', type=int, default=100) # 文本的最大长度
     parse.add_argument('--print_every', type=int, default=50)
+    parse.add_argument('--val_every', type=int, default=150)
+
     parse.add_argument('--data_path', type=str, default='data/Fakeddit', help='Locate the Fakeddit dataset on disk.')
 
 
