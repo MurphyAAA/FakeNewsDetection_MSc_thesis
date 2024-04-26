@@ -93,6 +93,7 @@
 >>- **date** : 26/04/2024
 >>- **summary** : \
     &nbsp;*1.* fine-tune Bert on Fakeddit set
+    &nbsp;*2.* learn to use HPC
 >>- **note** : \
 >>- &nbsp;*1.* 1 epoch, acc 88.56%
         
