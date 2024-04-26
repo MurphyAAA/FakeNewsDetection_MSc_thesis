@@ -83,9 +83,18 @@
     &nbsp;*1.* learning the Fakeddit dataset \
     &nbsp;*2.* learning Bert\
     &nbsp;*3.* coding
->>- 
 >>- **note** : \
-
+>>- **index** : 9
+>>- **date** : 25/04/2024
+>>- **summary** : \
+    &nbsp;*1.* fine-tune Bert on Fakeddit set
+>>- **note** : \
+>>- >>- **index** : 10
+>>- **date** : 26/04/2024
+>>- **summary** : \
+    &nbsp;*1.* fine-tune Bert on Fakeddit set
+>>- **note** : \
+>>- &nbsp;*1.* 1 epoch, acc 88.56%
         
 
 
