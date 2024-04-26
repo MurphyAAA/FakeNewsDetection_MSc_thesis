@@ -21,7 +21,8 @@ def parse_arguments():
     parse.add_argument('--val_every', type=int, default=150)
 
     parse.add_argument('--data_path', type=str, default='data/Fakeddit', help='Locate the Fakeddit dataset on disk.')
-
+    # parse.add_argument('--data_path', type=str, default='./FakeNewsDetection_MSc_thesis/data/Fakeddit',
+    #                    help='Locate the Fakeddit dataset on disk.')
 
     parse.add_argument('--cpu', action='store_true', help='If set, the experiment will run on the CPU')
 
