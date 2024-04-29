@@ -67,6 +67,7 @@
     &nbsp;*1.* read paper "Detection and visualization of misleading content on Twitter" 
 >>- **note** : \
 >---
+> ## Week 2
 >>- **index** : 7
 >>- **date** : 23/04/2024
 >>- **summary** : \
@@ -84,19 +85,28 @@
     &nbsp;*2.* learning Bert\
     &nbsp;*3.* coding
 >>- **note** : \
+>---
 >>- **index** : 9
 >>- **date** : 25/04/2024
 >>- **summary** : \
     &nbsp;*1.* fine-tune Bert on Fakeddit set
 >>- **note** : \
->>- >>- **index** : 10
+>---
+>>- **index** : 10
 >>- **date** : 26/04/2024
 >>- **summary** : \
-    &nbsp;*1.* fine-tune Bert on Fakeddit set
+    &nbsp;*1.* fine-tune Bert on Fakeddit set \
     &nbsp;*2.* learn to use HPC
 >>- **note** : \
 >>- &nbsp;*1.* 1 epoch, acc 88.56%
-        
+>---
+>>- **index** : 11
+>>- **date** : 28/04/2024
+>>- **summary** : \
+    &nbsp;*1.* learn to use HPC \
+    &nbsp;*2.* download the image set
+>>- **note** : \
+>>- &nbsp;*1.* 
 
 
 
