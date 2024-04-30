@@ -12,7 +12,7 @@ def parse_arguments():
 
     #hyperparams
     parse.add_argument('--lr', type=float, default=5e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
-    parse.add_argument('--num_epochs', type=int, default=1, help='Number of training epochs.') # 3
+    parse.add_argument('--num_epochs', type=int, default=3, help='Number of training epochs.') # 3
     parse.add_argument('--batch_size', type=int, default=32)
 
     parse.add_argument('--num_workers', type=int, default=1)
