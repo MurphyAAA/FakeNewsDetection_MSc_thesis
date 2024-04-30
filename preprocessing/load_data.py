@@ -35,7 +35,7 @@ class CustomDataset(Dataset):
         self.tokenizer = tokenizer
         self.data = dataframe
         self.text = dataframe["clean_title"]
-        self.label = dataframe["2_way_label"]
+        self.label = dataframe["3_way_label"]
         self.max_len = max_len
     def __len__(self):
         return len(self.text)
@@ -74,9 +74,9 @@ def load_datset(opt):
     df_val = read_file(opt['data_path'], 'multimodal_validate')
     df_test = read_file(opt['data_path'], 'multimodal_test_public')
 
-    df_train = df_train[["clean_title","2_way_label"]]
-    df_val = df_val[["clean_title","2_way_label"]]
-    df_test = df_test[["clean_title","2_way_label"]]
+    df_train = df_train[["clean_title","3_way_label"]]
+    df_val = df_val[["clean_title","3_way_label"]]
+    df_test = df_test[["clean_title","3_way_label"]]
     # new_df = df[["subreddit","2_way_label"]]
     # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
     # new_df = filter_df[["subreddit","2_way_label"]]
