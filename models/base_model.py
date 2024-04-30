@@ -16,7 +16,7 @@ class BERTClass(torch.nn.Module):
         self.l2 = torch.nn.Dropout(0.3)
         # self.l3 = torch.nn.Linear(768, 2) # Bert base 的H是768
         # self.l3 = torch.nn.Linear(768, 3)  # Bert base 的H是768
-        self.l3 = torch.nn.Linear(768, 6)  # Bert base 的H是768
+        self.l3 = torch.nn.Linear(768, 2)  # Bert base 的H是768
 
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
