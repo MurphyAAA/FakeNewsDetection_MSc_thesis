@@ -28,6 +28,7 @@ def main(opt):
     loss_fun2 = torch.nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=opt['lr'])
 
+    # return training time
     def train(epoch):
         tot_loss=0
         print_loss=0
@@ -68,6 +69,7 @@ def main(opt):
             #     print(f'**acc** : 【{acc*10000//1/100}%】')
             #     model.train()
         return tot_time
+    # return predict result and real label
     def validate():
         model.eval()
         fin_label=[]
@@ -91,8 +93,21 @@ def main(opt):
         print(f"EPOCH:[{epoch}]  EXECUTION TIME: {tot_time:.2f}s")
 
     outputs, labels = validate()
+    # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
     acc = metrics.accuracy_score(labels, outputs)
-    print(f'**acc** : 【{acc*100:.2f}%】')
+    precision = metrics.precision_score(labels, outputs)
+    recall = metrics.recall_score(labels, outputs)
+    f1 = metrics.f1_score(labels, outputs)
+    conf_matrix = metrics.confusion_matrix(labels, outputs)
+    TN = conf_matrix[0,0]
+    FP = conf_matrix[0,1]
+    FPR = FP/(FP+TN)
+    print("—————————— RESULT ——————————")
+    print(f'**acc** :       【{acc*100:.2f}%】')
+    print(f'**precision** : 【{precision*100:.2f}%】')
+    print(f'**recall** :    【{recall*100:.2f}%】')
+    print(f'**f1** :        【{f1*100:.2f}%】')
+    print(f'**FPR** :       【{FPR*100:.2f}%】')
 
 if __name__ == '__main__':
     opt = parse_arguments()
