@@ -108,13 +108,27 @@
 >>- **note** : \
 >>- &nbsp;*1.* 
 >---
+> ## Week 3
 >>- **index** : 12
 >>- **date** : 30/04/2024
 >>- **summary** : \
     &nbsp;*1.* train the model with textual set on Bert
 >>- **note** : \
 >>- &nbsp;*1.accuracy:* 2-way:88.01%, 3-way: 87.91%, 6-way: 81.13% 
-
+>---
+>>- **index** : 13
+>>- **date** : 02/05/2024
+>>- **summary** : \
+    &nbsp;*1.* learn CLIP
+>>- **note** : \
+>>- &nbsp;*1.:* 
+>---
+>>- **index** : 14
+>>- **date** : 03/05/2024
+>>- **summary** : \
+    &nbsp;*1.* learn CLIP
+>>- **note** : \
+>>- &nbsp;*1.:* 
 
 
 
