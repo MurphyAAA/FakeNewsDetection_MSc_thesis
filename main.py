@@ -95,19 +95,20 @@ def main(opt):
     outputs, labels = validate()
     # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
     acc = metrics.accuracy_score(labels, outputs)
-    precision = metrics.precision_score(labels, outputs)
-    recall = metrics.recall_score(labels, outputs)
-    f1 = metrics.f1_score(labels, outputs)
-    conf_matrix = metrics.confusion_matrix(labels, outputs)
-    TN = conf_matrix[0,0]
-    FP = conf_matrix[0,1]
-    FPR = FP/(FP+TN)
+    # precision = metrics.precision_score(labels, outputs)
+    precision = metrics.precision_score(labels, outputs, average='weighted')
+    recall = metrics.recall_score(labels, outputs, average=None)
+    f1 = metrics.f1_score(labels, outputs, average=None)
+    # conf_matrix = metrics.confusion_matrix(labels, outputs)
+    # TN = conf_matrix[0,0]
+    # FP = conf_matrix[0,1]
+    # FPR = FP/(FP+TN)
     print("—————————— RESULT ——————————")
     print(f'**acc** :       【{acc*100:.2f}%】')
     print(f'**precision** : 【{precision*100:.2f}%】')
     print(f'**recall** :    【{recall*100:.2f}%】')
     print(f'**f1** :        【{f1*100:.2f}%】')
-    print(f'**FPR** :       【{FPR*100:.2f}%】')
+    # print(f'**FPR** :       【{FPR*100:.2f}%】')
 
 if __name__ == '__main__':
     opt = parse_arguments()
