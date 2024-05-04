@@ -88,9 +88,9 @@ def main(opt):
                 # pdb.set_trace()
         return fin_output, fin_label
 
-    # for epoch in range(opt["num_epochs"]):
-    #     tot_time = train(epoch)
-    #     print(f"EPOCH:[{epoch}]  EXECUTION TIME: {tot_time:.2f}s")
+    for epoch in range(opt["num_epochs"]):
+        tot_time = train(epoch)
+        print(f"EPOCH:[{epoch}]  EXECUTION TIME: {tot_time:.2f}s")
 
     outputs, labels = validate()
     # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
@@ -99,7 +99,6 @@ def main(opt):
     precision = metrics.precision_score(labels, outputs, average=None)
     recall = metrics.recall_score(labels, outputs, average=None)
     f1 = metrics.f1_score(labels, outputs, average=None)
-    pdb.set_trace()
     conf_matrix = metrics.confusion_matrix(labels, outputs)
     # TN = conf_matrix[0,0]
     # FP = conf_matrix[0,1]
