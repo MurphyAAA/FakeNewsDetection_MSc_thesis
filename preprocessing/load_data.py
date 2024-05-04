@@ -21,7 +21,7 @@ subreddit
 title	
 upvote_ratio	
 2_way_label	
-3_way_label	
+3_way_label	 0: complete true, 1: sample is fake text is true, 2: sample is fake with false text
 6_way_label
 
 对于subreddit为 photoshopbattles 的label全是True

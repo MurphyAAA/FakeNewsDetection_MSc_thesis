@@ -88,27 +88,31 @@ def main(opt):
                 # pdb.set_trace()
         return fin_output, fin_label
 
-    for epoch in range(opt["num_epochs"]):
-        tot_time = train(epoch)
-        print(f"EPOCH:[{epoch}]  EXECUTION TIME: {tot_time:.2f}s")
+    # for epoch in range(opt["num_epochs"]):
+    #     tot_time = train(epoch)
+    #     print(f"EPOCH:[{epoch}]  EXECUTION TIME: {tot_time:.2f}s")
 
     outputs, labels = validate()
     # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
     acc = metrics.accuracy_score(labels, outputs)
     # precision = metrics.precision_score(labels, outputs)
-    precision = metrics.precision_score(labels, outputs, average='weighted')
+    precision = metrics.precision_score(labels, outputs, average=None)
     recall = metrics.recall_score(labels, outputs, average=None)
     f1 = metrics.f1_score(labels, outputs, average=None)
-    # conf_matrix = metrics.confusion_matrix(labels, outputs)
+    pdb.set_trace()
+    conf_matrix = metrics.confusion_matrix(labels, outputs)
     # TN = conf_matrix[0,0]
     # FP = conf_matrix[0,1]
     # FPR = FP/(FP+TN)
+
+    FPR = (conf_matrix[1,0]+conf_matrix[2,0]) / (conf_matrix.sum() - conf_matrix.diagonal().sum())
     print("—————————— RESULT ——————————")
     print(f'**acc** :       【{acc*100:.2f}%】')
-    print(f'**precision** : 【{precision*100:.2f}%】')
-    print(f'**recall** :    【{recall*100:.2f}%】')
-    print(f'**f1** :        【{f1*100:.2f}%】')
-    # print(f'**FPR** :       【{FPR*100:.2f}%】')
+    print(f'**precision** : 【{precision}】')
+    print(f'**recall** :    【{recall}】')
+    print(f'**f1** :        【{f1}】')
+    print(f'**conf_matrix**:【{conf_matrix}】')
+    print(f'**FPR** :       【{FPR}】')
 
 if __name__ == '__main__':
     opt = parse_arguments()
