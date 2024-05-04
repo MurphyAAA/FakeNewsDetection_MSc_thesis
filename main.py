@@ -110,7 +110,7 @@ def main(opt):
     print(f'**precision** : 【{precision}】')
     print(f'**recall** :    【{recall}】')
     print(f'**f1** :        【{f1}】')
-    print(f'**conf_matrix**:【{conf_matrix}】')
+    print(f'**conf_matrix**:\n【{conf_matrix}】')
     print(f'**FPR** :       【{FPR}】')
 
 if __name__ == '__main__':
