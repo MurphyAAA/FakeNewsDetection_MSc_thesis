@@ -25,6 +25,7 @@ def parse_arguments():
     #                    help='Locate the Fakeddit dataset on disk.')
 
     parse.add_argument('--cpu', action='store_true', help='If set, the experiment will run on the CPU')
+    parse.add_argument('--model', type=str, default="clip", choices=['bert', 'clip'])
 
     #Build options dict
     opt = vars(parse.parse_args())
