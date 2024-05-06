@@ -11,22 +11,26 @@ import time
 import pdb
 
 class BertExperiment:
-    def __init__(self, opt, train_loader, val_loader, test_loader):
+    def __init__(self, opt):
         self.opt = opt
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = BertClass()
         # model() 调用__call__()
         self.model.to(self.device)
 
-        self.train_loader = train_loader
-        self.val_loader = val_loader
-        self.test_loader = test_loader
+        self.train_loader = None
+        self.val_loader = None
+        self.test_loader = None
 
         # define loss function and optimizer
         self.loss_fun = torch.nn.CrossEntropyLoss()
         self.loss_fun2 = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
 
+    def set_dataloader(self, train_loader, val_loader, test_loader):
+        self.train_loader = train_loader
+        self.val_loader = val_loader
+        self.test_loader = test_loader
     # return training time
     def train(self, epoch):
         tot_loss = 0

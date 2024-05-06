@@ -3,6 +3,7 @@ import torch
 from parse_args import parse_arguments
 from preprocessing.load_data import build_dataloader
 from experiments.bert_exper import BertExperiment
+from experiments.clip_exper import ClipExperiment
 from sklearn import metrics
 import time
 import pdb
@@ -15,10 +16,10 @@ import pdb
 
 
 def main(opt):
-    train_loader, val_loader, test_loader = build_dataloader(opt)
     if opt["model"] == "bert":
-        experiment = BertExperiment(opt, train_loader, val_loader, test_loader)
-
+        experiment = BertExperiment(opt)
+        train_loader, val_loader, test_loader = build_dataloader(opt)
+        experiment.set_dataloader(train_loader, val_loader, test_loader)
         for epoch in range(opt["num_epochs"]):
             epoch_time = experiment.train(epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
@@ -43,8 +44,14 @@ def main(opt):
         print(f'**conf_matrix**:\n【{conf_matrix}】')
         print(f'**FPR** :       【{FPR}】')
 
-    # else: # clip
+    else: # clip
+        experiment = ClipExperiment(opt)
+        train_loader, val_loader, test_loader = build_dataloader(opt, experiment.preprocess)
+        experiment.set_dataloader(train_loader, val_loader, test_loader)
 
+        for epoch in range(opt['num_epochs']):
+            epoch_time = experiment.train(epoch)
+            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
 if __name__ == '__main__':
     opt = parse_arguments()
