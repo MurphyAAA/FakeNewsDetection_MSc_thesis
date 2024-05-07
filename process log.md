@@ -129,6 +129,43 @@
     &nbsp;*1.* learn CLIP
 >>- **note** : \
 >>- &nbsp;*1.:* 
-
-
+>---
+>>- **index** : 15
+>>- **date** : 04/05/2024
+>>- **summary** : \
+    &nbsp;*1.* fine tune CLIP
+>>- **note** : \
+>>- &nbsp;*1.:* 
+>---
+>>- **index** : 16
+>>- **date** : 05/05/2024
+>>- **summary** : \
+    &nbsp;*1.* fine tune CLIP
+>>- **note** : \
+>>- &nbsp;*1.:* 
+>---
+> ## Week 4
+>>- **index** : 17
+>>- **date** : 07/05/2024
+>>- **summary** : \
+    &nbsp;*1.* 
+>>- **note** : \
+>>
+>>|      | model | acc |
+>>|---|-----|---|
+>>| text | bert       | 1   |
+>>|  | clip-text  | 1   |
+>>| visual | vit        | 1   |
+>>|  | clip-visual | 1   |
+>>| multi-modal | bert+vit   | 1   |
+>>|  | clip       | 1   |
+text
+bert, clip-text,
+____
+visual
+vit, clip-visual
+___
+multi-modal
+bert+vit
+clip
 

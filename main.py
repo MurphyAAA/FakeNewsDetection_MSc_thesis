@@ -29,8 +29,11 @@ def main(opt):
         acc = metrics.accuracy_score(labels, outputs)
         # precision = metrics.precision_score(labels, outputs) # 2-way
         precision = metrics.precision_score(labels, outputs, average=None)  # 3/6-way
+        precision_macro = metrics.precision_score(labels, outputs, average="macro")
         recall = metrics.recall_score(labels, outputs, average=None)  # 3/6-way
+        recall_macro = metrics.recall_score(labels, outputs, average="macro")
         f1 = metrics.f1_score(labels, outputs, average=None)  # 3/6-way
+        f1_macro = metrics.f1_score(labels, outputs, average="macro")
         conf_matrix = metrics.confusion_matrix(labels, outputs)
         # TN = conf_matrix[0,0]
         # FP = conf_matrix[0,1]
@@ -38,9 +41,9 @@ def main(opt):
         FPR = (conf_matrix[1, 0] + conf_matrix[2, 0]) / (conf_matrix.sum() - conf_matrix.diagonal().sum())
         print("—————————— RESULT ——————————")
         print(f'**acc** :       【{acc * 100:.2f}%】')
-        print(f'**precision** : 【{precision}】')
-        print(f'**recall** :    【{recall}】')
-        print(f'**f1** :        【{f1}】')
+        print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
+        print(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
+        print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
         print(f'**conf_matrix**:\n【{conf_matrix}】')
         print(f'**FPR** :       【{FPR}】')
 
