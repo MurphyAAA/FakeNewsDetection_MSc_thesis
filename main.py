@@ -38,7 +38,7 @@ def main(opt):
         # TN = conf_matrix[0,0]
         # FP = conf_matrix[0,1]
         # FPR = FP/(FP+TN)
-        FPR = (conf_matrix[1, 0] + conf_matrix[2, 0]) / (conf_matrix.sum() - conf_matrix.diagonal().sum())
+        FPR = (conf_matrix[1, 0] + conf_matrix[2, 0]) / (conf_matrix.sum() - conf_matrix.diagonal().sum()) # how many fake news be trated as true in the false classified cases
         print("—————————— RESULT ——————————")
         print(f'**acc** :       【{acc * 100:.2f}%】')
         print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
@@ -49,7 +49,7 @@ def main(opt):
 
     else: # clip
         experiment = ClipExperiment(opt)
-        train_loader, val_loader, test_loader = build_dataloader(opt, experiment.preprocess)
+        train_loader, val_loader, test_loader = build_dataloader(opt)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
         for epoch in range(opt['num_epochs']):

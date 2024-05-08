@@ -31,7 +31,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
-import clip
+# import clip
 
 
 class CustomDataset(Dataset):  # for Bert training
@@ -71,9 +71,9 @@ class CustomDataset(Dataset):  # for Bert training
 
 
 class CustomDataset_Clip(Dataset):
-    def __init__(self, dataframe, clip_preprocess, data_path):
-        self.clip_preprocess = clip_preprocess
-        self.tokenizer = clip.tokenize
+    def __init__(self, dataframe, data_path):
+        # self.clip_processor = clip_processor
+        # self.tokenizer = clip.tokenize
         self.data = dataframe
         self.text = dataframe["clean_title"]
         self.label = dataframe["2_way_label"]
@@ -86,15 +86,14 @@ class CustomDataset_Clip(Dataset):
     def __getitem__(self, index):
         text = str(self.text[index])
         text = " ".join(text.split())
-        tokenized_text = self.tokenizer(text, truncate=True)
+        # tokenized_text = self.tokenizer(text, truncate=True)
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
-        # img_path, descriptions = self.examples[index]
 
-        img = self.clip_preprocess(Image.open(img_path))
-        # x, descriptions  # tuple(image, descriptions)
+        img = Image.open(img_path)
+        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
         return {
             "img": img,
-            "text_token": tokenized_text,
+            "text": text,
             "label": self.label[index]
         }
 
@@ -136,12 +135,16 @@ def build_dataloader(opt):
     #         maxlen = len(text.split())
     # print(f'max text len:{maxlen}, avg text len:{totlen/df_train.shape[0]}')
     # train max len: 553 words, avg len: 7.5 words # 有个问题，text长度不均匀，都padding了浪费资源，怎么能长度不一致也能训练？ ????????
-# if opt["model"] == "bert":
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+    if opt["model"] == "bert":
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
-    train_set = CustomDataset(df_train, tokenizer, opt['max_len'])
-    val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
-    test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
+        train_set = CustomDataset(df_train, tokenizer, opt['max_len'])
+        val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
+        test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
+    else: # clip
+        train_set = CustomDataset_Clip(df_train, opt['data_path'])
+        val_set = CustomDataset_Clip(df_val, opt['data_path'])
+        test_set = CustomDataset_Clip(df_test, opt['data_path'])
 
 
     train_params = {'batch_size': opt['batch_size'],
@@ -160,16 +163,16 @@ def build_dataloader(opt):
     return train_loader, val_loader, test_loader
 
 
-def build_dataloader(opt, preprocessor):
+def build_dataloader2(opt):
     df_train, df_val, df_test = load_datset(opt)
     print(df_train.head())
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
     print(f'testing set:{df_test.shape}')
 
-    train_set = CustomDataset_Clip(df_train, preprocessor, opt['data_path'])
-    val_set = CustomDataset_Clip(df_val, preprocessor, opt['data_path'])
-    test_set = CustomDataset_Clip(df_test, preprocessor, opt['data_path'])
+    train_set = CustomDataset_Clip(df_train, opt['data_path'])
+    val_set = CustomDataset_Clip(df_val, opt['data_path'])
+    test_set = CustomDataset_Clip(df_test, opt['data_path'])
 
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
