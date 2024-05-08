@@ -5,6 +5,7 @@
 @File ：load_data.py
 @IDE ：PyCharm
 """
+import pdb
 
 """ data:
 author
@@ -39,7 +40,7 @@ class CustomDataset(Dataset):  # for Bert training
         self.tokenizer = tokenizer
         self.data = dataframe
         self.text = dataframe["clean_title"]
-        self.label = dataframe["6_way_label"]
+        self.label = dataframe["2_way_label"]
         self.max_len = max_len
 
     def __len__(self):
@@ -90,15 +91,19 @@ class CustomDataset_Clip(Dataset):
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
         img = Image.open(img_path)
-        # transform = transforms.Compose([transforms.ToTensor()])
-        # tensor_img = transform(img)
-        print(img.size)
-        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, **{"truncation":True})
-        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True)
+
+        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
+        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
+
+        ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77
+        mask = torch.squeeze(inputs['attention_mask'], dim=0)# batch_size,77
+        pixel_values = torch.squeeze(inputs["pixel_values"], dim=0) # batch_size,3,224,224
+
         return {
-            "inputs":inputs,
-            # "tensor_img": tensor_img,
-            # "text": text,
+            'ids': ids.clone().detach(),
+            'mask': mask.clone().detach(),
+            'pixel_values': pixel_values.clone().detach(),
+            # 'label': torch.tensor(self.label[index], dtype=torch.long)
             # "label": self.label[index]
         }
 
@@ -154,7 +159,7 @@ def build_dataloader(opt, clip_processor=None):
 
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': True}
+                    'shuffle': False}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
@@ -162,34 +167,41 @@ def build_dataloader(opt, clip_processor=None):
                    'num_workers': opt['num_workers'],
                    'shuffle': True}
 
+
+
     train_loader = DataLoader(train_set, **train_params)
     val_loader = DataLoader(val_set, **val_params)
     test_loader = DataLoader(test_set, **test_params)
     return train_loader, val_loader, test_loader
 
-
-def build_dataloader2(opt):
-    df_train, df_val, df_test = load_datset(opt)
-    print(df_train.head())
-    print(f'training set:{df_train.shape}')
-    print(f'validation set:{df_val.shape}')
-    print(f'testing set:{df_test.shape}')
-
-    train_set = CustomDataset_Clip(df_train, opt['data_path'])
-    val_set = CustomDataset_Clip(df_val, opt['data_path'])
-    test_set = CustomDataset_Clip(df_test, opt['data_path'])
-
-    train_params = {'batch_size': opt['batch_size'],
-                    'num_workers': opt['num_workers'],
-                    'shuffle': True}
-    val_params = {'batch_size': opt['batch_size'],
-                  'num_workers': opt['num_workers'],
-                  'shuffle': False}
-    test_params = {'batch_size': opt['batch_size'],
-                   'num_workers': opt['num_workers'],
-                   'shuffle': True}
-
-    train_loader = DataLoader(train_set, **train_params)
-    val_loader = DataLoader(val_set, **val_params)
-    test_loader = DataLoader(test_set, **test_params)
-    return train_loader, val_loader, test_loader
+def collate_fn(batch):
+    return {
+        'ids': torch.stack([x['ids'] for x in batch]),
+        'mask': torch.stack([x['mask'] for x in batch]),
+        'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
+    }
+# def build_dataloader2(opt):
+#     df_train, df_val, df_test = load_datset(opt)
+#     print(df_train.head())
+#     print(f'training set:{df_train.shape}')
+#     print(f'validation set:{df_val.shape}')
+#     print(f'testing set:{df_test.shape}')
+#
+#     train_set = CustomDataset_Clip(df_train, opt['data_path'])
+#     # pdb.set_trace()
+#     val_set = CustomDataset_Clip(df_val, opt['data_path'])
+#     test_set = CustomDataset_Clip(df_test, opt['data_path'])
+#
+#     train_params = {'batch_size': opt['batch_size'],
+#                     'num_workers': opt['num_workers'],
+#                     'shuffle': True}
+#     val_params = {'batch_size': opt['batch_size'],
+#                   'num_workers': opt['num_workers'],
+#                   'shuffle': False}
+#     test_params = {'batch_size': opt['batch_size'],
+#                    'num_workers': opt['num_workers'],
+#                    'shuffle': True}
+#     train_loader = DataLoader(train_set, **train_params)
+#     val_loader = DataLoader(val_set, **val_params)
+#     test_loader = DataLoader(test_set, **test_params)
+#     return train_loader, val_loader, test_loader

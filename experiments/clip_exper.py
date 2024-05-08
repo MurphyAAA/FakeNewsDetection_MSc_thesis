@@ -51,15 +51,16 @@ class ClipExperiment:
         self.model.train()
         start_time = time.time()
         for idx, databatch in enumerate(self.train_loader):
-            # img, description,label
-            # img = databatch["tensor_img"].to(self.device)
-            # text = databatch["text"].to(self.device)
-            # label =
-            # inputs = self.processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
-            inputs = databatch["inputs"]
-            inputs = {key: val.to(self.device) for key, val in inputs.items()}
+            ids = databatch["ids"].to(self.device, dtype=torch.long)
+            mask = databatch["mask"].to(self.device, dtype=torch.long)
+            pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
 
-            logits_per_image, logits_per_text = self.model(**inputs)
+            # inputs = databatch
+            # inputs = {key: val.to(self.device) for key, val in inputs.items()}
+            # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
+            output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask)
+            logits_per_image, logits_per_text = output.logits_per_image, output.logits_per_text
+
             ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
 
             self.optimizer.zero_grad()
