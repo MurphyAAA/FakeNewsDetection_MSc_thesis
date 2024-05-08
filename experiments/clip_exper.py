@@ -6,7 +6,6 @@
 @IDE ：PyCharm
 """
 import torch
-import clip
 from transformers import CLIPProcessor, CLIPModel, CLIPConfig
 import time
 import pdb

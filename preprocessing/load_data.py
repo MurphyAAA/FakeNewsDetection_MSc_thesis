@@ -31,7 +31,6 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
-# import clip
 
 
 class CustomDataset(Dataset):  # for Bert training
