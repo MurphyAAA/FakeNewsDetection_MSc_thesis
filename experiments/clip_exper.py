@@ -57,7 +57,7 @@ class ClipExperiment:
             text = databatch["text"].to(self.device)
             inputs = self.processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
             # label =
-            logits_per_image, logits_per_text = self.model(inputs)
+            logits_per_image, logits_per_text = self.model(**inputs)
             ground_truth = torch.arange(len(img), dtype=torch.long, device=self.device)
 
             self.optimizer.zero_grad()
