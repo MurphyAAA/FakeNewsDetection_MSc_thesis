@@ -31,6 +31,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
+from torchvision import transforms
 
 
 class CustomDataset(Dataset):  # for Bert training
@@ -89,9 +90,11 @@ class CustomDataset_Clip(Dataset):
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
         img = Image.open(img_path)
+        transform = transforms.Compose([transforms.ToTensor()])
+        tensor_img = transform(img)
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
         return {
-            "img": img,
+            "tensor_img": tensor_img,
             "text": text,
             "label": self.label[index]
         }

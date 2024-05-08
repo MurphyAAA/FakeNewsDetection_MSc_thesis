@@ -53,7 +53,7 @@ class ClipExperiment:
         for idx, databatch in enumerate(self.train_loader):
 
             # img, description,label
-            img = databatch["img"]
+            img = databatch["tensor_img"]
             text = databatch["text"].to(self.device)
             inputs = self.processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
             # label =
