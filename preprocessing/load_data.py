@@ -92,8 +92,9 @@ class CustomDataset_Clip(Dataset):
         img = Image.open(img_path)
         # transform = transforms.Compose([transforms.ToTensor()])
         # tensor_img = transform(img)
-        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, **{"truncate":True})
-        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True)
+        print(img.size)
+        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, **{"truncation":True})
+        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True)
         return {
             "inputs":inputs,
             # "tensor_img": tensor_img,

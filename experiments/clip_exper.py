@@ -57,6 +57,7 @@ class ClipExperiment:
             # label =
             # inputs = self.processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
             inputs = databatch["inputs"]
+            inputs = {key: val.to(self.device) for key, val in inputs.items()}
 
             logits_per_image, logits_per_text = self.model(**inputs)
             ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
