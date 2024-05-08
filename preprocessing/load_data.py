@@ -7,6 +7,8 @@
 """
 import pdb
 
+import PIL
+
 """ data:
 author
 clean_title	:移除标点，数字，小写...
@@ -35,6 +37,7 @@ from PIL import Image
 from torchvision import transforms
 
 
+exceptionImages=[]
 class CustomDataset(Dataset):  # for Bert training
     def __init__(self, dataframe, tokenizer, max_len):
         self.tokenizer = tokenizer
@@ -90,8 +93,11 @@ class CustomDataset_Clip(Dataset):
         # tokenized_text = self.tokenizer(text, truncate=True)
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
-        img = Image.open(img_path)
-
+        try:
+            img = Image.open(img_path)
+        except PIL.UnidentifiedImageError:
+            exceptionImages.append(self.img_id[index])
+            img=None
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
         inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
 
