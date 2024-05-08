@@ -71,8 +71,8 @@ class CustomDataset(Dataset):  # for Bert training
 
 
 class CustomDataset_Clip(Dataset):
-    def __init__(self, dataframe, data_path):
-        # self.clip_processor = clip_processor
+    def __init__(self, dataframe, clip_processor, data_path):
+        self.clip_processor = clip_processor
         # self.tokenizer = clip.tokenize
         self.data = dataframe
         self.text = dataframe["clean_title"]
@@ -90,13 +90,14 @@ class CustomDataset_Clip(Dataset):
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
         img = Image.open(img_path)
-        transform = transforms.Compose([transforms.ToTensor()])
-        tensor_img = transform(img)
-        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
+        # transform = transforms.Compose([transforms.ToTensor()])
+        # tensor_img = transform(img)
+        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
         return {
-            "tensor_img": tensor_img,
-            "text": text,
-            "label": self.label[index]
+            "inputs":inputs,
+            # "tensor_img": tensor_img,
+            # "text": text,
+            # "label": self.label[index]
         }
 
 
@@ -123,7 +124,7 @@ def load_datset(opt):
     return df_train, df_val, df_test
 
 
-def build_dataloader(opt):
+def build_dataloader(opt, clip_processor=None):
     df_train, df_val, df_test = load_datset(opt)
     print(df_train.head())
     print(f'training set:{df_train.shape}')
@@ -144,9 +145,9 @@ def build_dataloader(opt):
         val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
         test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
     else: # clip
-        train_set = CustomDataset_Clip(df_train, opt['data_path'])
-        val_set = CustomDataset_Clip(df_val, opt['data_path'])
-        test_set = CustomDataset_Clip(df_test, opt['data_path'])
+        train_set = CustomDataset_Clip(df_train, clip_processor, opt['data_path'])
+        val_set = CustomDataset_Clip(df_val, clip_processor, opt['data_path'])
+        test_set = CustomDataset_Clip(df_test, clip_processor, opt['data_path'])
 
 
     train_params = {'batch_size': opt['batch_size'],

@@ -49,7 +49,7 @@ def main(opt):
 
     else: # clip
         experiment = ClipExperiment(opt)
-        train_loader, val_loader, test_loader = build_dataloader(opt)
+        train_loader, val_loader, test_loader = build_dataloader(opt, clip_processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
         for epoch in range(opt['num_epochs']):

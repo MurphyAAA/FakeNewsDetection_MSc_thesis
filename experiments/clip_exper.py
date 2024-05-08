@@ -51,14 +51,15 @@ class ClipExperiment:
         self.model.train()
         start_time = time.time()
         for idx, databatch in enumerate(self.train_loader):
-
             # img, description,label
-            img = databatch["tensor_img"].to(self.device)
-            text = databatch["text"].to(self.device)
-            inputs = self.processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
+            # img = databatch["tensor_img"].to(self.device)
+            # text = databatch["text"].to(self.device)
             # label =
+            # inputs = self.processor(text=text, images=img, return_tensors="pt", padding=True, truncate=True)
+            inputs = databatch["inputs"]
+
             logits_per_image, logits_per_text = self.model(**inputs)
-            ground_truth = torch.arange(len(img), dtype=torch.long, device=self.device)
+            ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
 
             self.optimizer.zero_grad()
             loss = (self.ent_loss(logits_per_image, ground_truth) + self.ent_loss(logits_per_text, ground_truth)) / 2
