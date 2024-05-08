@@ -36,8 +36,9 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
 from torchvision import transforms
 
+exceptionImages = []
 
-exceptionImages=[]
+
 class CustomDataset(Dataset):  # for Bert training
     def __init__(self, dataframe, tokenizer, max_len):
         self.tokenizer = tokenizer
@@ -97,13 +98,13 @@ class CustomDataset_Clip(Dataset):
             img = Image.open(img_path)
         except PIL.UnidentifiedImageError:
             exceptionImages.append(self.img_id[index])
-            img=None
+            return None
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
         inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
 
-        ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77
-        mask = torch.squeeze(inputs['attention_mask'], dim=0)# batch_size,77
-        pixel_values = torch.squeeze(inputs["pixel_values"], dim=0) # batch_size,3,224,224
+        ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
+        mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
+        pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
 
         return {
             'ids': ids.clone().detach(),
@@ -157,11 +158,10 @@ def build_dataloader(opt, clip_processor=None):
         train_set = CustomDataset(df_train, tokenizer, opt['max_len'])
         val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
         test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
-    else: # clip
+    else:  # clip
         train_set = CustomDataset_Clip(df_train, clip_processor, opt['data_path'])
         val_set = CustomDataset_Clip(df_val, clip_processor, opt['data_path'])
         test_set = CustomDataset_Clip(df_test, clip_processor, opt['data_path'])
-
 
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
@@ -173,19 +173,21 @@ def build_dataloader(opt, clip_processor=None):
                    'num_workers': opt['num_workers'],
                    'shuffle': True}
 
-
-
-    train_loader = DataLoader(train_set, **train_params)
-    val_loader = DataLoader(val_set, **val_params)
-    test_loader = DataLoader(test_set, **test_params)
+    train_loader = DataLoader(train_set, **train_params, collate_fn=collate_fn)
+    val_loader = DataLoader(val_set, **val_params, collate_fn=collate_fn)
+    test_loader = DataLoader(test_set, **test_params, collate_fn=collate_fn)
     return train_loader, val_loader, test_loader
 
+
 def collate_fn(batch):
-    return {
-        'ids': torch.stack([x['ids'] for x in batch]),
-        'mask': torch.stack([x['mask'] for x in batch]),
-        'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
-    }
+    filtered_batch = [data for data in batch if data is not None]
+    # 如果剩余样本为空，则返回空列表
+    if len(filtered_batch) == 0:
+        return []
+
+    # 否则，构建完整的批次
+    return torch.utils.data._utils.collate.default_collate(filtered_batch)
+
 # def build_dataloader2(opt):
 #     df_train, df_val, df_test = load_datset(opt)
 #     print(df_train.head())
