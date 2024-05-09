@@ -27,8 +27,8 @@ def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图�
                 img_path = f'data/Fakeddit/public_image_set/{index}.jpg'
                 try:
                     Image.open(img_path)
-                except PIL.UnidentifiedImageError:
-                    file.write(f'{index} ')
+                except Exception as e:
+                    file.write(f'{index} - {e}')
                     continue
     else:
         print(f"file {filename} exists")
