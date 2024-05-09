@@ -27,10 +27,12 @@ def check_file(filename, dataframe, res):  # 检查 train,val,test数据集中�
         img_path = f'data/Fakeddit/public_image_set/{index}.jpg'
         try:
             img = Image.open(img_path)
+        except PIL.Image.DecompressionBombError:
+            res[index] = PIL.Image.DecompressionBombError
         except Exception as e:
             # file.write(f'{index} - {e}')
             res[index] = e
-            continue
+            # continue
     # return res
 
 
