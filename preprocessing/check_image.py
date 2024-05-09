@@ -22,8 +22,9 @@ def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图�
     if not os.path.isfile(f'data/Fakeddit/{filename}'):
         with open(filename, "w") as file:
             print(f"starting check 【{filename}】")
+            print(os.getcwd())
             for index in dataframe["id"]:
-                img_path = f'data/Fakeddit/public_image_set/{index}.jpg'
+                img_path = f'../data/Fakeddit/public_image_set/{index}.jpg'
                 try:
                     Image.open(img_path)
                 except PIL.UnidentifiedImageError:
