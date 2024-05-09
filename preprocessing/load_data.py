@@ -35,6 +35,7 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
 from torchvision import transforms
+import os
 
 exceptionImages = []
 
@@ -122,7 +123,7 @@ def read_file(data_path, filename):
     return df
 
 
-def load_datset(opt):
+def load_datset(opt, filter_img_flg):
     df_train = read_file(opt['data_path'], 'multimodal_train')
     df_val = read_file(opt['data_path'], 'multimodal_validate')
     df_test = read_file(opt['data_path'], 'multimodal_test_public')
@@ -134,6 +135,23 @@ def load_datset(opt):
     # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
     # new_df = filter_df[["subreddit","2_way_label"]]
     # print(filter_df.count())
+    # if filter_img_flg == True:
+    #     def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图片是否能正常打开，不能打开则将图片名写入文件filename
+    #         if not os.path.isfile(f'{opt["data_path"]}/{filename}'):
+    #             with open(filename, "w") as file:
+    #                 for index in dataframe["id"]:
+    #                     img_path = f'{opt["data_path"]}/public_image_set/{index}.jpg'
+    #                     try:
+    #                         Image.open(img_path)
+    #                     except PIL.UnidentifiedImageError:
+    #                         file.write(f'{index} ')
+    #                         continue
+    #         else:
+    #             print(f"file {filename} exists")
+    #
+    #     check_file("filter_image_train.txt", df_train)
+    #     check_file("filter_image_val.txt", df_val)
+    #     check_file("filter_image_test.txt", df_test)
 
     return df_train, df_val, df_test
 
@@ -173,43 +191,16 @@ def build_dataloader(opt, clip_processor=None):
                    'num_workers': opt['num_workers'],
                    'shuffle': True}
 
-    train_loader = DataLoader(train_set, **train_params, collate_fn=collate_fn)
-    val_loader = DataLoader(val_set, **val_params, collate_fn=collate_fn)
-    test_loader = DataLoader(test_set, **test_params, collate_fn=collate_fn)
+    train_loader = DataLoader(train_set, **train_params)
+    val_loader = DataLoader(val_set, **val_params)
+    test_loader = DataLoader(test_set, **test_params)
     return train_loader, val_loader, test_loader
 
-
-def collate_fn(batch):
-    filtered_batch = [data for data in batch if data is not None]
-    # 如果剩余样本为空，则返回空列表
-    if len(filtered_batch) == 0:
-        return []
-
-    # 否则，构建完整的批次
-    return torch.utils.data._utils.collate.default_collate(filtered_batch)
-
-# def build_dataloader2(opt):
-#     df_train, df_val, df_test = load_datset(opt)
-#     print(df_train.head())
-#     print(f'training set:{df_train.shape}')
-#     print(f'validation set:{df_val.shape}')
-#     print(f'testing set:{df_test.shape}')
+# def collate_fn(batch):
+#     filtered_batch = [data for data in batch if data is not None]
+#     # 如果剩余样本为空，则返回空列表
+#     if len(filtered_batch) == 0:
+#         return []
 #
-#     train_set = CustomDataset_Clip(df_train, opt['data_path'])
-#     # pdb.set_trace()
-#     val_set = CustomDataset_Clip(df_val, opt['data_path'])
-#     test_set = CustomDataset_Clip(df_test, opt['data_path'])
-#
-#     train_params = {'batch_size': opt['batch_size'],
-#                     'num_workers': opt['num_workers'],
-#                     'shuffle': True}
-#     val_params = {'batch_size': opt['batch_size'],
-#                   'num_workers': opt['num_workers'],
-#                   'shuffle': False}
-#     test_params = {'batch_size': opt['batch_size'],
-#                    'num_workers': opt['num_workers'],
-#                    'shuffle': True}
-#     train_loader = DataLoader(train_set, **train_params)
-#     val_loader = DataLoader(val_set, **val_params)
-#     test_loader = DataLoader(test_set, **test_params)
-#     return train_loader, val_loader, test_loader
+#     # 否则，构建完整的批次
+#     return torch.utils.data._utils.collate.default_collate(filtered_batch)
