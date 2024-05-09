@@ -168,4 +168,10 @@ ___
 multi-modal
 bert+vit
 clip
-
+>---
+>>- **index** : 18
+>>- **date** : 08/05/2024
+>>- **summary** : \
+    &nbsp;*1.* learn hugging face clip, fix bugs 
+>>- **note** : \
+>>
