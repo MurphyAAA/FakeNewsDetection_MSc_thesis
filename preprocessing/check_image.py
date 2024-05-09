@@ -24,7 +24,7 @@ def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图�
             print(f"starting check 【{filename}】")
             print(os.getcwd())
             for index in dataframe["id"]:
-                img_path = f'../data/Fakeddit/public_image_set/{index}.jpg'
+                img_path = f'data/Fakeddit/public_image_set/{index}.jpg'
                 try:
                     Image.open(img_path)
                 except PIL.UnidentifiedImageError:
@@ -35,9 +35,9 @@ def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图�
 
 
 if __name__ == '__main__':
-    df_train = read_file("../data/Fakeddit", 'multimodal_train')
-    df_val = read_file("../data/Fakeddit", 'multimodal_validate')
-    df_test = read_file("../data/Fakeddit", 'multimodal_test_public')
+    df_train = read_file("data/Fakeddit", 'multimodal_train')
+    df_val = read_file("data/Fakeddit", 'multimodal_validate')
+    df_test = read_file("data/Fakeddit", 'multimodal_test_public')
 
     df_train = df_train[["clean_title", "id", "2_way_label"]]
     df_val = df_val[["clean_title", "id", "2_way_label"]]
