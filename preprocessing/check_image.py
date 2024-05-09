@@ -9,7 +9,13 @@ import os
 import PIL
 from PIL import Image
 import pandas as pd
-from preprocessing.load_data import read_file
+
+
+def read_file(data_path, filename):
+    df = pd.read_csv(f'{data_path}/{filename}.tsv', delimiter='\t')
+
+    # print(df.head())
+    return df
 
 
 def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图片是否能正常打开，不能打开则将图片名写入文件filename
