@@ -53,9 +53,9 @@ if __name__ == '__main__':
     res2={}
     res3={}
     check_file("filter_image_train.txt", df_train, res1)
+    print(list(res1.keys()))
     check_file("filter_image_val.txt", df_val, res2)
+    print(list(res2.keys()))
     check_file("filter_image_test.txt", df_test, res3)
-    print(list(res1.keys()))
-    print(list(res1.keys()))
-    print(list(res1.keys()))
+    print(list(res3.keys()))
     print("---end---")
