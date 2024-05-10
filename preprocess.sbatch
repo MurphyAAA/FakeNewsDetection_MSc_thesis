@@ -3,7 +3,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=s300570@studenti.polito.it
 #SBATCH --partition=cuda
-#SBATCH --time=00:30:00
+#SBATCH --time=02:30:00
 #SBATCH --ntasks-per-node=8
 #SBATCH --output=./result/filter_images_%j.log
 #SBATCH --gres=gpu:1
