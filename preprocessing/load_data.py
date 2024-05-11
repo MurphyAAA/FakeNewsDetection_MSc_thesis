@@ -34,6 +34,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
+from filter_dataset import get_filter_dataset
 from torchvision import transforms
 import os
 
@@ -131,6 +132,8 @@ def load_datset(opt, filter_img_flg):
     df_train = df_train[["clean_title", "id", "2_way_label"]]
     df_val = df_val[["clean_title", "id", "2_way_label"]]
     df_test = df_test[["clean_title", "id", "2_way_label"]]
+
+    df_train, df_val, df_test = get_filter_dataset(df_train, df_val, df_test)
     # new_df = df[["subreddit","2_way_label"]]
     # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
     # new_df = filter_df[["subreddit","2_way_label"]]
