@@ -34,7 +34,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
-from filter_dataset import get_filter_dataset
+from test import get_filter_dataset
 from torchvision import transforms
 import os
 
