@@ -6,9 +6,15 @@
 @IDE ：PyCharm
 """
 import pdb
-
 import PIL
-
+import pandas as pd
+import torch
+from torch.utils.data import Dataset, DataLoader
+from transformers import BertTokenizer, BertForSequenceClassification
+from PIL import Image
+from filter_image import get_filter_dataset
+from torchvision import transforms
+import os
 """ data:
 author
 clean_title	:移除标点，数字，小写...
@@ -29,14 +35,7 @@ upvote_ratio
 
 对于subreddit为 photoshopbattles 的label全是True
 """
-import pandas as pd
-import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import BertTokenizer, BertForSequenceClassification
-from PIL import Image
-from test import get_filter_dataset
-from torchvision import transforms
-import os
+
 
 exceptionImages = []
 
@@ -124,7 +123,7 @@ def read_file(data_path, filename):
     return df
 
 
-def load_datset(opt, filter_img_flg):
+def load_dataset(opt):
     df_train = read_file(opt['data_path'], 'multimodal_train')
     df_val = read_file(opt['data_path'], 'multimodal_validate')
     df_test = read_file(opt['data_path'], 'multimodal_test_public')
@@ -160,7 +159,7 @@ def load_datset(opt, filter_img_flg):
 
 
 def build_dataloader(opt, clip_processor=None):
-    df_train, df_val, df_test = load_datset(opt)
+    df_train, df_val, df_test = load_dataset(opt)
     print(df_train.head())
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')

@@ -7,7 +7,7 @@ from experiments.clip_exper import ClipExperiment
 from sklearn import metrics
 import time
 import pdb
-
+import sys
 """
 之后用 bert、clip提取特征，fine-tune clip、bert
 要求的意思是只用bert或clip提取特征么？而不是直接用那个模型？？
@@ -57,6 +57,7 @@ def main(opt):
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
 if __name__ == '__main__':
+    print(sys.path)
     opt = parse_arguments()
     main(opt)
     print("----finish----")

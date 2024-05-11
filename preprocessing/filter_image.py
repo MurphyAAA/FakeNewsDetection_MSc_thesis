@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2024/5/10 10:34
+@Time ： 2024/5/11 11:15
 @Auth ： Murphy
-@File ：filter_dataset.py
+@File ：filter_image.py
 @IDE ：PyCharm
 """
 
-from load_data import read_file
+
+
 
 def read_image_id(filename):
     with open(f"./data/Fakeddit/failed_images/{filename}", "r") as file:
         content = file.read()
     ids = content.split("\'")[1::2]
-    id_list = [id.strip("'")for id in ids]
+    id_list = [id.strip("'") for id in ids]
     return id_list
+
 
 def get_filter_dataset(df_train, df_val, df_test):
     id_list_train = read_image_id("failed_images_train.txt")
