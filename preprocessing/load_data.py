@@ -11,10 +11,12 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
-from PIL import Image
+from PIL import Image, ImageFile
 import preprocessing
 from torchvision import transforms
 import os
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 """ data:
 author
 clean_title	:移除标点，数字，小写...
