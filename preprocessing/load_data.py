@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image
-import preprocessing.filter_image
+import preprocessing
 from torchvision import transforms
 import os
 """ data:
