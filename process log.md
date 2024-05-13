@@ -174,4 +174,19 @@ clip
 >>- **summary** : \
     &nbsp;*1.* learn hugging face clip, fix bugs 
 >>- **note** : \
->>
+>---
+>>- **index** : 19
+>>- **date** : 11/05/2024
+>>- **summary** : \
+    &nbsp;*1.* code on HPC can not find the local file
+>>- **note** : \
+>>- &nbsp;*1.:* should write entire path when import module e.g. import proprecessing.filter_image, instead of import filter_image
+>---
+>>- **index** : 20
+>>- **date** : 13/05/2024
+>>- **summary** : \
+    &nbsp;*1.* loss increasing when training clip....
+    &nbsp;*2.* image be truncated as well....
+    &nbsp;*3.* dataframe index error if filter some rows, should use reset_index()
+>>- **note** : \
+>>- &nbsp;*1.:* 
