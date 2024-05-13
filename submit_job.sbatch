@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=8
 #SBATCH --output=./result/clip_result_2_way_%j.log
 # --output=fake_news_detection_%j.log
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:3
 source ~/.bashrc
 conda activate NLP_project
 
