@@ -45,11 +45,11 @@ class BertExperiment:
             token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
             label = databatch["label"].to(self.device, dtype=torch.long)
             # predict
-            logits = self.model(ids, mask, token_type_ids)
+            embedding = self.model(ids, mask, token_type_ids) # embedding
 
             self.optimizer.zero_grad()
             # pdb.set_trace()
-            loss = self.loss_fun(logits, label)
+            loss = self.loss_fun(embedding, label)
             # for visualization
             tot_loss += loss.item()
             print_loss += loss.item()
