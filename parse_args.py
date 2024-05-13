@@ -11,7 +11,7 @@ def parse_arguments():
     parse = argparse.ArgumentParser()
 
     #hyperparams
-    parse.add_argument('--lr', type=float, default=5e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
+    parse.add_argument('--lr', type=float, default=1e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
     parse.add_argument('--num_epochs', type=int, default=3, help='Number of training epochs.') # 3
     parse.add_argument('--batch_size', type=int, default=16)
 
