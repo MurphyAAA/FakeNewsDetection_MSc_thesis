@@ -26,6 +26,9 @@ def get_filter_dataset(df_train, df_val, df_test):
     filter_df_val = df_val[~df_val["id"].isin(id_list_val)]
     filter_df_test = df_test[~df_test["id"].isin(id_list_test)]
 
+    filter_df_train = filter_df_train.reset_index(drop=True)
+    filter_df_val = filter_df_val.reset_index(drop=True)
+    filter_df_test = filter_df_test.reset_index(drop=True)
     return filter_df_train, filter_df_val, filter_df_test
 
 # if __name__ == "__main__":
