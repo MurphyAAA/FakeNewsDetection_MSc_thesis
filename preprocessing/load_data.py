@@ -95,11 +95,11 @@ class CustomDataset_Clip(Dataset):
         # tokenized_text = self.tokenizer(text, truncate=True)
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
-        try:
-            img = Image.open(img_path)
-        except PIL.UnidentifiedImageError:
-            exceptionImages.append(self.img_id[index])
-            return None
+        # try:
+        img = Image.open(img_path)
+        # except PIL.UnidentifiedImageError:
+        #     exceptionImages.append(self.img_id[index])
+        #     return None
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
         inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
 
@@ -132,7 +132,7 @@ def load_dataset(opt):
     df_val = df_val[["clean_title", "id", "2_way_label"]]
     df_test = df_test[["clean_title", "id", "2_way_label"]]
 
-    df_train, df_val, df_test = preprocessing.filter_image.get_filter_dataset(df_train, df_val, df_test)
+    df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val, df_test)
     # new_df = df[["subreddit","2_way_label"]]
     # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
     # new_df = filter_df[["subreddit","2_way_label"]]
@@ -155,7 +155,7 @@ def load_dataset(opt):
     #     check_file("filter_image_val.txt", df_val)
     #     check_file("filter_image_test.txt", df_test)
 
-    return df_train, df_val, df_test
+    return df_train_filter, df_val_filter, df_test_filter
 
 
 def build_dataloader(opt, clip_processor=None):
