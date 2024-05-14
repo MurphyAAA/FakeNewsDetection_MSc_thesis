@@ -58,14 +58,14 @@ class ClipExperiment:
             # inputs = databatch
             # inputs = {key: val.to(self.device) for key, val in inputs.items()}
             # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
-            output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask)
+            output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
             # logits_per_image, logits_per_text = output.logits_per_image, output.logits_per_text
-            img_embeds, text_embeds = output.image_embeds, output.text_embeds #用这个去训练，不要用logit ！！！！！！！！！！
-            # pdb.set_trace()
-            ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
+            # img_embeds, text_embeds = output.image_embeds, output.text_embeds #用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
+            # ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
 
             self.optimizer.zero_grad()
-            loss = (self.ent_loss(img_embeds, ground_truth) + self.ent_loss(img_embeds, ground_truth)) / 2
+            # loss = (self.ent_loss(img_embeds, ground_truth) + self.ent_loss(img_embeds, ground_truth)) / 2
+            loss = output[0]
             tot_loss += loss.item()
             print_loss += loss.item()
 
