@@ -51,9 +51,11 @@ def main(opt):
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader = build_dataloader(opt, clip_processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
+        start_epoch=0
 
-        for epoch in range(opt['num_epochs']):
+        for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
+            torch.save(experiment.model.state_dict(), f"result/model_checkpoint_epoch_{epoch}.pth")
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
 if __name__ == '__main__':
