@@ -11,4 +11,4 @@
 source ~/.bashrc
 conda activate NLP_project
 
-python main.py --batch_size=16
+python main.py --batch_size=16 --num_epochs=1

@@ -6,7 +6,8 @@
 @IDE ：PyCharm
 """
 import torch
-from transformers import CLIPProcessor, CLIPModel, CLIPConfig
+from transformers import CLIPProcessor
+from models.clip_model import ClipClass
 import time
 import pdb
 
@@ -16,7 +17,8 @@ class ClipExperiment:
         self.opt = opt
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         # self.model, self.preprocess = clip.load("ViT-B/32", device='cpu') # load it first to CPU to ensure you're using fp32 precision
-        self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        # self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        self.model = ClipClass()
         self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
         self.model.to(self.device)
 
@@ -54,18 +56,20 @@ class ClipExperiment:
             ids = databatch["ids"].to(self.device, dtype=torch.long)
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            label = databatch["label"].to(self.device, dtype=torch.long)
 
             # inputs = databatch
             # inputs = {key: val.to(self.device) for key, val in inputs.items()}
             # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
-            output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
+            # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
+            output = self.model(ids, mask, pixel_values)
             # logits_per_image, logits_per_text = output.logits_per_image, output.logits_per_text
             # img_embeds, text_embeds = output.image_embeds, output.text_embeds #用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
             # ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
 
             self.optimizer.zero_grad()
             # loss = (self.ent_loss(img_embeds, ground_truth) + self.ent_loss(img_embeds, ground_truth)) / 2
-            loss = output[0]
+            loss = self.ent_loss(output, label)
             tot_loss += loss.item()
             print_loss += loss.item()
 

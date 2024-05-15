@@ -12,7 +12,7 @@ import transformers
 class BertClass(torch.nn.Module):
     def __init__(self):
         super(BertClass, self).__init__()
-        self.l1 = transformers.BertModel.from_pretrained('bert-base-uncased')
+        self.l1 = transformers.BertModel.from_pretrained('bert-base-uncased') # embedding
         self.l2 = torch.nn.Dropout(0.3)
         # self.l3 = torch.nn.Linear(768, 2) # Bert base 的H是768
         # self.l3 = torch.nn.Linear(768, 3)  # Bert base 的H是768

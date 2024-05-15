@@ -114,7 +114,7 @@ class CustomDataset_Clip(Dataset):
             'mask': mask.clone().detach(),
             'pixel_values': pixel_values.clone().detach(),
             # 'label': torch.tensor(self.label[index], dtype=torch.long)
-            # "label": self.label[index]
+            "label": self.label[index]
         }
 
 
