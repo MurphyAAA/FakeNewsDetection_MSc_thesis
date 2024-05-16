@@ -59,6 +59,7 @@ class ClipExperiment:
         epoch = checkpoint['end_epoch']
         tot_loss = checkpoint['tot_loss']
         self.model.load_state_dict(checkpoint['model'])
+        self.model.to(self.device)
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         self.scaler.load_state_dict(checkpoint['scaler'])
         return epoch, tot_loss
