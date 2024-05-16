@@ -9,6 +9,7 @@ import torch
 from transformers import CLIPProcessor
 from models.clip_model import ClipClass
 import time
+from torch.cuda.amp import autocast, GradScaler
 import pdb
 
 
@@ -31,7 +32,7 @@ class ClipExperiment:
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
                                           weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
 
-
+        self.scaler = GradScaler()
 
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
@@ -43,11 +44,31 @@ class ClipExperiment:
     #         p.data = p.data.float()
     #         p.grad.data = p.grad.data.float()
 
+    def save_clip_checkpoint(self, path, epoch, tot_loss):
+        checkpoint = {
+            'end_epoch': epoch,
+            'tot_loss': tot_loss,
+            'model': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'scaler': self.scaler.state_dict()
+        }
+        torch.save(checkpoint, path)
+
+    def load_clip_checkpoint(self, path):
+        checkpoint = torch.load(path)
+        epoch = checkpoint['end_epoch']
+        tot_loss = checkpoint['tot_loss']
+        self.model.load_state_dict(checkpoint['model'])
+        self.optimizer.load_state_dict(checkpoint['optimizer'])
+        self.scaler.load_state_dict(checkpoint['scaler'])
+        return epoch, tot_loss
+
     def freeze_params(self, module):
         for param in module.parameters():
             param.requires_grad = False
-    def train(self, epoch):
-        tot_loss = 0
+
+    def train(self, epoch, tot_loss):
+        tot_loss = tot_loss
         print_loss = 0
         epoch_time = 0
         self.model.train()
@@ -57,31 +78,21 @@ class ClipExperiment:
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
             label = databatch["label"].to(self.device, dtype=torch.long)
-
-            # inputs = databatch
-            # inputs = {key: val.to(self.device) for key, val in inputs.items()}
-            # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
-            # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
-            output = self.model(ids, mask, pixel_values)
-            # logits_per_image, logits_per_text = output.logits_per_image, output.logits_per_text
-            # img_embeds, text_embeds = output.image_embeds, output.text_embeds #用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
-            # ground_truth = torch.arange(self.opt["batch_size"], dtype=torch.long, device=self.device)
-
-            self.optimizer.zero_grad()
-            # loss = (self.ent_loss(img_embeds, ground_truth) + self.ent_loss(img_embeds, ground_truth)) / 2
-            loss = self.ent_loss(output, label)
+            with autocast:  # mixed precision training. Convert applicable model parameters to fp16
+                # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
+                # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
+                output = self.model(ids, mask, pixel_values)
+                self.optimizer.zero_grad()
+                loss = self.ent_loss(output, label)
             tot_loss += loss.item()
             print_loss += loss.item()
 
             self.optimizer.zero_grad()
-            loss.backward()
-            # if self.device == "cpu":
-            #     self.optimizer.step()
-            # else:
-            #     self.convert_models_to_fp32()
-            #     self.optimizer.step()
-            #     clip.model.convert_weights(self.model)  # mixed precision training. Convert applicable model parameters to fp16
-            self.optimizer.step()
+            # loss.backward()
+            # self.optimizer.step()
+            self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
+            self.scaler.step(self.optimizer)  # 来更新模型参数。
+            self.scaler.update()  # 来更新模型参数。
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
                 loader_time = (end_time - start_time)
@@ -92,5 +103,19 @@ class ClipExperiment:
                 print_loss = 0
         return epoch_time
 
-    # def validation(self):
-    #     # todo
+    def validation(self):
+        self.model.eval()
+        fin_label = []
+        fin_output = []
+        with torch.no_grad():
+            for _, databatch in enumerate(self.val_loader):
+                ids = databatch["ids"].to(self.device, dtype=torch.long)
+                mask = databatch["mask"].to(self.device, dtype=torch.long)
+                pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+                label = databatch["label"].to(self.device, dtype=torch.long)
+
+                logits = self.model(ids, mask, pixel_values)
+                pred = torch.argmax(logits, dim=-1)
+                fin_label.extend(label.cpu().detach().tolist())
+                fin_output.extend(pred.cpu().detach().tolist())
+        return fin_output, fin_label
