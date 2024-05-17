@@ -32,7 +32,7 @@ class ClipExperiment:
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
                                           weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
 
-        self.scaler = GradScaler()
+        # self.scaler = GradScaler()
 
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
@@ -79,21 +79,26 @@ class ClipExperiment:
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
             label = databatch["label"].to(self.device, dtype=torch.long)
-            with autocast():  # mixed precision training. Convert applicable model parameters to fp16
+        # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  先不加混精度试一下
                 # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
                 # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
-                output = self.model(ids, mask, pixel_values)
-                self.optimizer.zero_grad()
-                loss = self.ent_loss(output, label)
+            output = self.model(ids, mask, pixel_values)
+            self.optimizer.zero_grad()
+            loss = self.ent_loss(output, label)
             tot_loss += loss.item()
             print_loss += loss.item()
 
             self.optimizer.zero_grad()
-            # loss.backward()
-            # self.optimizer.step()
-            self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
-            self.scaler.step(self.optimizer)  # 来更新模型参数。
-            self.scaler.update()  # 来更新模型参数。
+            loss.backward()
+            self.optimizer.step()
+            # self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
+
+            # # 梯度裁剪 防止梯度过大loss变成nan
+            # self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
+            # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
+            # self.scaler.step(self.optimizer)  # 来更新模型参数。
+            # self.scaler.update()  # 来更新模型参数。
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
                 loader_time = (end_time - start_time)
