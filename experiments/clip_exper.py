@@ -79,7 +79,7 @@ class ClipExperiment:
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
             label = databatch["label"].to(self.device, dtype=torch.long)
-        # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  先不加混精度试一下
+        # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
                 # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
                 # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
             output = self.model(ids, mask, pixel_values)
