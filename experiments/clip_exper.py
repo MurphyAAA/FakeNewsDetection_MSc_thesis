@@ -50,7 +50,7 @@ class ClipExperiment:
             'tot_loss': tot_loss,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            'scaler': self.scaler.state_dict()
+            # 'scaler': self.scaler.state_dict()
         }
         torch.save(checkpoint, path)
 
@@ -61,7 +61,7 @@ class ClipExperiment:
         self.model.load_state_dict(checkpoint['model'])
         self.model.to(self.device)
         self.optimizer.load_state_dict(checkpoint['optimizer'])
-        self.scaler.load_state_dict(checkpoint['scaler'])
+        # self.scaler.load_state_dict(checkpoint['scaler'])
         return epoch, tot_loss
 
     def freeze_params(self, module):
