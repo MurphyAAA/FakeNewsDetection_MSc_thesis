@@ -190,3 +190,24 @@ clip
     &nbsp;*3.* dataframe index error if filter some rows, should use reset_index()
 >>- **note** : \
 >>- &nbsp;*1.:* 
+>---
+>>- **index** : 21
+>>- **date** : 14/05/2024
+>>- **summary** : \
+    &nbsp;*1.* fix bug of using clip model 
+>>- **note** : \
+>>- &nbsp;*1.:* 
+>---
+>>- **index** : 22
+>>- **date** : 15/05/2024
+>>- **summary** : \
+    &nbsp;*1.* fix bug of using clip model 
+>>- **note** : \
+>>- &nbsp;*1.:* 
+>---
+>>- **index** : 23
+>>- **date** : 16/05/2024
+>>- **summary** : \
+    &nbsp;*1.* fix bug of using clip model 
+>>- **note** : \
+>>- &nbsp;*1.:* 
