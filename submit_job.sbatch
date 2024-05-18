@@ -5,10 +5,10 @@
 #SBATCH --partition=cuda
 #SBATCH --time=04:30:00
 #SBATCH --ntasks-per-node=8
-#SBATCH --output=./result/clip_result_2_way_%j.log
+#SBATCH --output=./result/clip_base_result_2_way_%j.log
 # --output=fake_news_detection_%j.log
 #SBATCH --gres=gpu:2
 source ~/.bashrc
 conda activate NLP_project
 
-python main.py --batch_size=8
+python main.py --batch_size=8 --label_type="2_way" --model="clip"

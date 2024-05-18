@@ -38,7 +38,7 @@ def main(opt):
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader = build_dataloader(opt, clip_processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        if os.path.exists(f'{opt["output_path"]}/checkpoint_epoch_0.pth'):
+        if os.path.exists(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0.pth'):
             print("loading model")
             start_epoch, tot_loss = experiment.load_clip_checkpoint(f'{opt["output_path"]}/checkpoint_epoch_0.pth')
         else:
@@ -47,7 +47,7 @@ def main(opt):
             # train
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time, loss = experiment.train(epoch, tot_loss)
-            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_epoch_{epoch}.pth', epoch, loss)
+            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}.pth', epoch, loss)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
         predicts, labels = experiment.validation()
