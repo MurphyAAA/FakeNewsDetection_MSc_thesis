@@ -1433,4 +1433,13 @@ EPOCH:[0]  EXECUTION TIME: 14975.83s
   warnings.warn(
 /home/yma/miniconda3/envs/NLP_project/lib/python3.9/site-packages/PIL/Image.py:3186: DecompressionBombWarning: Image size (154995913 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
   warnings.warn(
-slurmstepd: error: *** JOB 943818 ON compute-2-9 CANCELLED AT 2024-05-18T07:11:54 DUE TO TIME LIMIT ***
+—————————— RESULT ——————————
+**acc** :       【77.66%】
+**precision** : 【0.6951082536116813】------- **precision-Macro** : 【0.7673121913219696】
+**recall** :    【0.7695969125214408】------- **precision-Macro** : 【0.7754013079241908】
+**f1** :        【0.7304584952888744】------- **precision-Macro** : 【0.7698852317501687】
+**conf_matrix**:
+【[[28107  7872]
+ [ 5373 17947]]】
+**FPR** :       【0.21879429667305927】
+----finish----

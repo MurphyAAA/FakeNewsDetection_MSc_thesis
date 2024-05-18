@@ -14,7 +14,7 @@ class BertExperiment:
     def __init__(self, opt):
         self.opt = opt
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
-        self.model = BertClass()
+        self.model = BertClass(opt)
         # model() 调用__call__()
         self.model.to(self.device)
 

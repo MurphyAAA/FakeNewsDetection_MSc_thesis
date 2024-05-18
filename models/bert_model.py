@@ -10,13 +10,16 @@ import transformers
 
 
 class BertClass(torch.nn.Module):
-    def __init__(self):
+    def __init__(self,opt):
         super(BertClass, self).__init__()
         self.l1 = transformers.BertModel.from_pretrained('bert-base-uncased') # embedding
         self.l2 = torch.nn.Dropout(0.3)
-        # self.l3 = torch.nn.Linear(768, 2) # Bert base 的H是768
-        # self.l3 = torch.nn.Linear(768, 3)  # Bert base 的H是768
-        self.l3 = torch.nn.Linear(768, 6)  # Bert base 的H是768
+        if opt["label_type"] == "2_way":
+            self.l3 = torch.nn.Linear(768, 2) # Bert base 的H是768
+        elif opt["label_type"] == "3_way":
+            self.l3 = torch.nn.Linear(768, 3)  # Bert base 的H是768
+        else:  # 6_way
+            self.l3 = torch.nn.Linear(768, 6)  # Bert base 的H是768
 
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")

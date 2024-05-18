@@ -38,7 +38,6 @@ upvote_ratio
 对于subreddit为 photoshopbattles 的label全是True
 """
 
-
 exceptionImages = []
 
 
@@ -47,7 +46,7 @@ class CustomDataset(Dataset):  # for Bert training
         self.tokenizer = tokenizer
         self.data = dataframe
         self.text = dataframe["clean_title"]
-        self.label = dataframe["2_way_label"]
+        self.label = dataframe["label"]
         self.max_len = max_len
 
     def __len__(self):
@@ -84,7 +83,7 @@ class CustomDataset_Clip(Dataset):
         # self.tokenizer = clip.tokenize
         self.data = dataframe
         self.text = dataframe["clean_title"]
-        self.label = dataframe["2_way_label"]
+        self.label = dataframe["label"]
         self.img_id = dataframe["id"]
         self.data_path = data_path
 
@@ -130,11 +129,34 @@ def load_dataset(opt):
     df_val = read_file(opt['data_path'], 'multimodal_validate')
     df_test = read_file(opt['data_path'], 'multimodal_test_public')
 
-    df_train = df_train[["clean_title", "id", "2_way_label"]]
-    df_val = df_val[["clean_title", "id", "2_way_label"]]
-    df_test = df_test[["clean_title", "id", "2_way_label"]]
+    if opt["label_type"] == "2_way":
+        df_train = df_train[["clean_title", "id", "2_way_label"]]
+        df_val = df_val[["clean_title", "id", "2_way_label"]]
+        df_test = df_test[["clean_title", "id", "2_way_label"]]
 
-    df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val, df_test)
+        df_train = df_train.rename(columns={"2_way_label": "label"})
+        df_val = df_val.rename(columns={"2_way_label": "label"})
+        df_test = df_test.rename(columns={"2_way_label": "label"})
+
+    elif opt["label_type"] == "3_way":
+        df_train = df_train[["clean_title", "id", "3_way_label"]]
+        df_val = df_val[["clean_title", "id", "3_way_label"]]
+        df_test = df_test[["clean_title", "id", "3_way_label"]]
+
+        df_train = df_train.rename(columns={"3_way_label": "label"})
+        df_val = df_val.rename(columns={"3_way_label": "label"})
+        df_test = df_test.rename(columns={"3_way_label": "label"})
+    else:  # 6_way
+        df_train = df_train[["clean_title", "id", "6_way_label"]]
+        df_val = df_val[["clean_title", "id", "6_way_label"]]
+        df_test = df_test[["clean_title", "id", "6_way_label"]]
+
+        df_train = df_train.rename(columns={"6_way_label": "label"})
+        df_val = df_val.rename(columns={"6_way_label": "label"})
+        df_test = df_test.rename(columns={"6_way_label": "label"})
+
+    df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val,
+                                                                                                   df_test)
     # new_df = df[["subreddit","2_way_label"]]
     # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
     # new_df = filter_df[["subreddit","2_way_label"]]
@@ -180,7 +202,7 @@ def build_dataloader(opt, clip_processor=None):
         train_set = CustomDataset(df_train, tokenizer, opt['max_len'])
         val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
         test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
-    else:  # clip
+    elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/clip_large
         train_set = CustomDataset_Clip(df_train, clip_processor, opt['data_path'])
         val_set = CustomDataset_Clip(df_val, clip_processor, opt['data_path'])
         test_set = CustomDataset_Clip(df_test, clip_processor, opt['data_path'])

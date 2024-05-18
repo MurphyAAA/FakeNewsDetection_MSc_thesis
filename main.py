@@ -29,9 +29,12 @@ def main(opt):
 
         predicts, labels = experiment.validate()
         # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
-        evaluation(labels,predicts,False)
+        if opt["label_type"] == "2_way":
+            evaluation(labels, predicts, True)
+        else:  # 3/6_way
+            evaluation(labels, predicts, False)
 
-    else:  # clip
+    elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/ clip_large
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader = build_dataloader(opt, clip_processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
@@ -42,27 +45,31 @@ def main(opt):
             start_epoch = 0
             tot_loss = 0
             # train
-        # for epoch in range(start_epoch, opt['num_epochs']):
-        #     epoch_time, loss = experiment.train(epoch, tot_loss)
-        #     experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_epoch_{epoch}.pth', epoch, loss)
-        #     print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        for epoch in range(start_epoch, opt['num_epochs']):
+            epoch_time, loss = experiment.train(epoch, tot_loss)
+            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_epoch_{epoch}.pth', epoch, loss)
+            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
         predicts, labels = experiment.validation()
-        evaluation(labels, predicts, True)
+        if opt["label_type"] == "2_way":
+            evaluation(labels, predicts, True)
+        else:  # 3/6_way
+            evaluation(labels, predicts, False)
+
 
 def evaluation(labels, predicts, two_way):
-    if two_way: # 2-way
+    if two_way:  # 2_way
         acc = metrics.accuracy_score(labels, predicts)
-        precision = metrics.precision_score(labels, predicts) # 2-way
+        precision = metrics.precision_score(labels, predicts)  # 2_way
         precision_macro = metrics.precision_score(labels, predicts, average="macro")
-        recall = metrics.recall_score(labels, predicts)  # 3/6-way
+        recall = metrics.recall_score(labels, predicts)  # 3/6_way
         recall_macro = metrics.recall_score(labels, predicts, average="macro")
-        f1 = metrics.f1_score(labels, predicts)  # 3/6-way
+        f1 = metrics.f1_score(labels, predicts)  # 3/6_way
         f1_macro = metrics.f1_score(labels, predicts, average="macro")
         conf_matrix = metrics.confusion_matrix(labels, predicts)
-        TN = conf_matrix[0,0]
-        FP = conf_matrix[0,1]
-        FPR = FP/(FP+TN)
+        TN = conf_matrix[0, 0]
+        FP = conf_matrix[0, 1]
+        FPR = FP / (FP + TN)
         print("—————————— RESULT ——————————")
         print(f'**acc** :       【{acc * 100:.2f}%】')
         print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
@@ -70,13 +77,13 @@ def evaluation(labels, predicts, two_way):
         print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
         print(f'**conf_matrix**:\n【{conf_matrix}】')
         print(f'**FPR** :       【{FPR}】')
-    else: # 3/6-way
+    else:  # 3/6_way
         acc = metrics.accuracy_score(labels, predicts)
-        precision = metrics.precision_score(labels, predicts, average=None)  # 3/6-way
+        precision = metrics.precision_score(labels, predicts, average=None)  # 3/6_way
         precision_macro = metrics.precision_score(labels, predicts, average="macro")
-        recall = metrics.recall_score(labels, predicts, average=None)  # 3/6-way
+        recall = metrics.recall_score(labels, predicts, average=None)  # 3/6_way
         recall_macro = metrics.recall_score(labels, predicts, average="macro")
-        f1 = metrics.f1_score(labels, predicts, average=None)  # 3/6-way
+        f1 = metrics.f1_score(labels, predicts, average=None)  # 3/6_way
         f1_macro = metrics.f1_score(labels, predicts, average="macro")
         conf_matrix = metrics.confusion_matrix(labels, predicts)
         # TN = conf_matrix[0,0]

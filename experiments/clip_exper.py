@@ -19,8 +19,11 @@ class ClipExperiment:
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         # self.model, self.preprocess = clip.load("ViT-B/32", device='cpu') # load it first to CPU to ensure you're using fp32 precision
         # self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        self.model = ClipClass()
-        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        self.model = ClipClass(opt)
+        if opt["model"] == "clip":
+            self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        else: # clip_large
+            self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
         self.model.to(self.device)
 
         self.train_loader = None
