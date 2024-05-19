@@ -40,7 +40,7 @@ def main(opt):
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         if os.path.exists(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0.pth'):
             print("loading model")
-            start_epoch, tot_loss = experiment.load_clip_checkpoint(f'{opt["output_path"]}/checkpoint_epoch_0.pth')
+            start_epoch, tot_loss = experiment.load_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0.pth')
         else:
             start_epoch = 0
             tot_loss = 0
