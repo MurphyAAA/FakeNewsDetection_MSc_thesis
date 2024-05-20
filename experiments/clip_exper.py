@@ -49,7 +49,7 @@ class ClipExperiment:
 
     def save_clip_checkpoint(self, path, epoch, tot_loss):
         checkpoint = {
-            'end_epoch': epoch,
+            'end_epoch': epoch+1,
             'tot_loss': tot_loss,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
@@ -108,7 +108,7 @@ class ClipExperiment:
                 epoch_time += loader_time
                 start_time = time.time()
                 print(
-                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
+                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / epoch*len(self.train_loader)+(idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 print_loss = 0
         return epoch_time, tot_loss
 
