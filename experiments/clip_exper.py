@@ -49,7 +49,7 @@ class ClipExperiment:
 
     def save_clip_checkpoint(self, path, epoch, tot_loss):
         checkpoint = {
-            'end_epoch': epoch+1,
+            'end_epoch': epoch,
             'tot_loss': tot_loss,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),

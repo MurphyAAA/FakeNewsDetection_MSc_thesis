@@ -41,6 +41,7 @@ def main(opt):
         if os.path.exists(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0.pth'):
             print("loading model")
             start_epoch, tot_loss = experiment.load_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0.pth')
+            start_epoch +=1
         else:
             start_epoch = 0
             tot_loss = 0
@@ -50,11 +51,11 @@ def main(opt):
             experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}.pth', epoch, loss)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
-        predicts, labels = experiment.validation()
-        if opt["label_type"] == "2_way":
-            evaluation(labels, predicts, True)
-        else:  # 3/6_way
-            evaluation(labels, predicts, False)
+        # predicts, labels = experiment.validation()
+        # if opt["label_type"] == "2_way":
+        #     evaluation(labels, predicts, True)
+        # else:  # 3/6_way
+        #     evaluation(labels, predicts, False)
 
 
 def evaluation(labels, predicts, two_way):
