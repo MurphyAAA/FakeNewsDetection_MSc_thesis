@@ -38,20 +38,20 @@ def main(opt):
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader = build_dataloader(opt, clip_processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        if os.path.exists(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0.pth'):
+        if os.path.exists(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_1_{opt["label_type"]}.pth'):
             print("loading model")
-            start_epoch, tot_loss = experiment.load_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth')
+            start_epoch = experiment.load_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth')
             start_epoch += 1
         else:
             start_epoch = 0
-            tot_loss = 0
+            # tot_loss = 0
             # train
         print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
-            epoch_time, loss = experiment.train(epoch, tot_loss)
-            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch, loss)
+            epoch_time = experiment.train(epoch)
+            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
-
+        print("validation")
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
             evaluation(labels, predicts, True)

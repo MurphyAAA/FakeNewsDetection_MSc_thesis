@@ -47,10 +47,10 @@ class ClipExperiment:
     #         p.data = p.data.float()
     #         p.grad.data = p.grad.data.float()
 
-    def save_clip_checkpoint(self, path, epoch, tot_loss):
+    def save_clip_checkpoint(self, path, epoch):
         checkpoint = {
             'end_epoch': epoch,
-            'tot_loss': tot_loss,
+            # 'tot_loss': tot_loss,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             # 'scaler': self.scaler.state_dict()
@@ -60,19 +60,19 @@ class ClipExperiment:
     def load_clip_checkpoint(self, path):
         checkpoint = torch.load(path)
         epoch = checkpoint['end_epoch']
-        tot_loss = checkpoint['tot_loss']
+        # tot_loss = checkpoint['tot_loss']
         self.model.load_state_dict(checkpoint['model'])
         self.model.to(self.device)
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         # self.scaler.load_state_dict(checkpoint['scaler'])
-        return epoch, tot_loss
+        return epoch
 
     def freeze_params(self, module):
         for param in module.parameters():
             param.requires_grad = False
 
-    def train(self, epoch, tot_loss):
-        tot_loss = tot_loss
+    def train(self, epoch):
+        tot_loss = 0
         print_loss = 0
         epoch_time = 0
         self.model.train()
@@ -110,7 +110,7 @@ class ClipExperiment:
                 print(
                     f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (epoch*len(self.train_loader)+(idx + 1))}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 print_loss = 0
-        return epoch_time, tot_loss
+        return epoch_time
 
     def validation(self):
         self.model.eval()
