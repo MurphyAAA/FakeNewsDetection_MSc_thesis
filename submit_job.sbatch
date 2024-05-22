@@ -3,7 +3,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=s300570@studenti.polito.it
 #SBATCH --partition=cuda
-#SBATCH --time=04:30:00
+#SBATCH --time=15:30:00
 #SBATCH --ntasks-per-node=8
 #SBATCH --output=./result/clip_base_result_2_way_%j.log
 # --output=fake_news_detection_%j.log
