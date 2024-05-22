@@ -20,7 +20,7 @@ class ClipClass(torch.nn.Module):
             self.model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
         # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
         # self.l2 = torch.nn.Linear(512,64) # ***********这一层加不加后面再调整
-        self.l3 = torch.nn.Dropout(0.3)
+        self.l3 = torch.nn.Dropout(0.2)
         # self.l4 = torch.nn.Linear(128, 2)
         if opt["label_type"] == "2_way":
             self.l4 = torch.nn.Linear(1024, 2)

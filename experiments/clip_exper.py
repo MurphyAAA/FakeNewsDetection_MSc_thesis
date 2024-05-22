@@ -35,7 +35,8 @@ class ClipExperiment:
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
                                           weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
 
-        # self.scaler = GradScaler()
+        self.scaler = GradScaler()
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
 
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
@@ -53,18 +54,22 @@ class ClipExperiment:
             # 'tot_loss': tot_loss,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            # 'scaler': self.scaler.state_dict()
+            'scheduler_state_dict': self.scheduler.state_dict(),
+            'scaler': self.scaler.state_dict()
         }
         torch.save(checkpoint, path)
+        print(f"Checkpoint saved at epoch {epoch}")
 
     def load_clip_checkpoint(self, path):
         checkpoint = torch.load(path)
-        epoch = checkpoint['end_epoch']
+        epoch = checkpoint['end_epoch']+1
         # tot_loss = checkpoint['tot_loss']
         self.model.load_state_dict(checkpoint['model'])
         self.model.to(self.device)
         self.optimizer.load_state_dict(checkpoint['optimizer'])
-        # self.scaler.load_state_dict(checkpoint['scaler'])
+        self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        self.scaler.load_state_dict(checkpoint['scaler'])
+        print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
 
     def freeze_params(self, module):
@@ -82,34 +87,35 @@ class ClipExperiment:
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
             label = databatch["label"].to(self.device, dtype=torch.long)
-        # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
-                # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
-                # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
-            output = self.model(ids, mask, pixel_values)
-            self.optimizer.zero_grad()
-            loss = self.ent_loss(output, label)
+            with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
+                    # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
+                    # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
+                output = self.model(ids, mask, pixel_values)
+                self.optimizer.zero_grad()
+                loss = self.ent_loss(output, label)
             tot_loss += loss.item()
             print_loss += loss.item()
 
             self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-            # self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
+            # loss.backward()
+            # self.optimizer.step()
+            self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
 
             # # 梯度裁剪 防止梯度过大loss变成nan
-            # self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
-            # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-            # self.scaler.step(self.optimizer)  # 来更新模型参数。
-            # self.scaler.update()  # 来更新模型参数。
+            self.scaler.step(self.optimizer)  # 来更新模型参数。
+            self.scaler.update()  # 来更新模型参数。
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
                 loader_time = (end_time - start_time)
                 epoch_time += loader_time
                 start_time = time.time()
                 print(
-                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (epoch*len(self.train_loader)+(idx + 1))}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
+                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 print_loss = 0
+        self.scheduler.step(tot_loss)
         return epoch_time
 
     def validation(self):
