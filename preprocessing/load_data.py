@@ -17,7 +17,7 @@ from torchvision import transforms
 import os
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-Image.MAX_IMAGE_PIXELS = 631770000
+# Image.MAX_IMAGE_PIXELS = 631770000
 """ data:
 author
 clean_title	:移除标点，数字，小写...
@@ -97,8 +97,10 @@ class CustomDataset_Clip(Dataset):
         # tokenized_text = self.tokenizer(text, truncate=True)
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
-        # try:
-        img = Image.open(img_path)
+        try:
+            img = Image.open(img_path)
+        except Image.DecompressionBombWarning:
+            print(f"图片过大 {self.img_id[index]}")
         # except PIL.UnidentifiedImageError:
         #     exceptionImages.append(self.img_id[index])
         #     return None

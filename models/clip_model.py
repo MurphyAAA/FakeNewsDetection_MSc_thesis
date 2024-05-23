@@ -35,7 +35,7 @@ class ClipClass(torch.nn.Module):
         output_1 = self.model(input_ids=ids, attention_mask=mask,
                               pixel_values=pixel_values)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
         img_embeds, text_embeds = output_1.image_embeds, output_1.text_embeds  # 用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
-
+        print(f"------------------------------------------image embed:{img_embeds}, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
         # output_2_img = self.l2(img_embeds)
         # output_2_text = self.l2(text_embeds)
         # combined_output = torch.cat((output_2_text, output_2_img), dim=1)

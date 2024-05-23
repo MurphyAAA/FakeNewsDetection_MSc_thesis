@@ -5,12 +5,24 @@
 @File ：clip_exper.py
 @IDE ：PyCharm
 """
+import numpy
 import torch
 from transformers import CLIPProcessor
 from models.clip_model import ClipClass
 import time
 from torch.cuda.amp import autocast, GradScaler
 import pdb
+
+# torch.autograd.set_detect_anomaly(True)
+
+def check_gradients(model):
+    total_norm = 0.0
+    for p in model.parameters():
+        if p.grad is not None:
+            param_norm = p.grad.data.norm(2)
+            total_norm += param_norm.item() ** 2
+    total_norm = total_norm ** (1. / 2)
+    return total_norm
 
 
 class ClipExperiment:
@@ -36,7 +48,7 @@ class ClipExperiment:
                                           weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
 
         self.scaler = GradScaler()
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
+        # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
 
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
@@ -54,7 +66,7 @@ class ClipExperiment:
             # 'tot_loss': tot_loss,
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            'scheduler_state_dict': self.scheduler.state_dict(),
+            # 'scheduler_state_dict': self.scheduler.state_dict(),
             'scaler': self.scaler.state_dict()
         }
         torch.save(checkpoint, path)
@@ -67,7 +79,7 @@ class ClipExperiment:
         self.model.load_state_dict(checkpoint['model'])
         self.model.to(self.device)
         self.optimizer.load_state_dict(checkpoint['optimizer'])
-        self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        # self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         self.scaler.load_state_dict(checkpoint['scaler'])
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
@@ -93,6 +105,10 @@ class ClipExperiment:
                 output = self.model(ids, mask, pixel_values)
                 self.optimizer.zero_grad()
                 loss = self.ent_loss(output, label)
+            if torch.isnan(loss):
+                print(f"loss is nan: [{loss.item()}, {output}, {label}]")
+                grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
+                print(grad_norm)
             tot_loss += loss.item()
             print_loss += loss.item()
 
@@ -112,14 +128,19 @@ class ClipExperiment:
                 loader_time = (end_time - start_time)
                 epoch_time += loader_time
                 start_time = time.time()
+                if numpy.isnan(tot_loss / (idx + 1)):
+                    print(f"avg loss is nan: [ {tot_loss} / {(idx + 1)} ]")
+
                 print(
                     f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
+
                 print_loss = 0
-        self.scheduler.step(tot_loss)
+        # self.scheduler.step(tot_loss)
         return epoch_time
 
     def validation(self):
         self.model.eval()
+        tot_loss = 0
         fin_label = []
         fin_output = []
         with torch.no_grad():
@@ -129,8 +150,13 @@ class ClipExperiment:
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 label = databatch["label"].to(self.device, dtype=torch.long)
 
-                logits = self.model(ids, mask, pixel_values)
-                pred = torch.argmax(logits, dim=-1)
+                embedding = self.model(ids, mask, pixel_values)
+                loss = self.ent_loss(embedding, label)
+                pred = torch.argmax(embedding, dim=-1)
+                tot_loss += loss.item()
+                if _ % self.opt["print_every"] == 0:
+                    print(
+                        f" avg_loss: {tot_loss / (_ + 1)}")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 fin_label.extend(label.cpu().detach().tolist())
                 fin_output.extend(pred.cpu().detach().tolist())
         return fin_output, fin_label

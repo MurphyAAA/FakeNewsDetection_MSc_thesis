@@ -211,3 +211,10 @@ clip
     &nbsp;*1.* fix bug of using clip model 
 >>- **note** : \
 >>- &nbsp;*1.:* 
+>---
+>>- **index** : 24
+>>- **date** : 23/05/2024
+>>- **summary** : \
+    &nbsp;*1.* loss会增加，会变成nan
+>>- **note** : \
+>>- &nbsp;*1.:* 
