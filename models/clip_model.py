@@ -32,14 +32,14 @@ class ClipClass(torch.nn.Module):
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
     def forward(self, ids, mask, pixel_values):
-        output_1 = self.model(input_ids=ids, attention_mask=mask,
-                              pixel_values=pixel_values)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
-        img_embeds, text_embeds = output_1.image_embeds, output_1.text_embeds  # 用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
-        print(f"------------------------------------------image embed:{img_embeds}, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
+        output_1 = self.model(input_ids=ids, attention_mask=mask)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
+        text_embeds = output_1.text_embeds  # 用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
+        print(f"------------------------------------------image embed:img_embeds, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
         # output_2_img = self.l2(img_embeds)
         # output_2_text = self.l2(text_embeds)
         # combined_output = torch.cat((output_2_text, output_2_img), dim=1)
-        combined_output = torch.cat((text_embeds, img_embeds), dim=1)  # ********** 组合方式也可以调整
-        output_3 = self.l3(combined_output)
+        # combined_output = torch.cat((text_embeds, img_embeds), dim=1)  # ********** 组合方式也可以调整
+        # output_3 = self.l3(combined_output)
+        output_3 = self.l3(text_embeds) # 先只看text embedding 为啥是nan了
         output = self.l4(output_3)
         return output

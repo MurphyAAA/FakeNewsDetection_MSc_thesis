@@ -102,13 +102,9 @@ class ClipExperiment:
             with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
                     # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
                     # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
-                output = self.model(ids, mask, pixel_values)
+                output = self.model(ids, mask) # self.model(ids, mask, pixel_values)
                 self.optimizer.zero_grad()
                 loss = self.ent_loss(output, label)
-            if torch.isnan(loss):
-                print(f"loss is nan: [{loss.item()}, {output}, {label}]")
-                grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
-                print(grad_norm)
             tot_loss += loss.item()
             print_loss += loss.item()
 
@@ -116,6 +112,10 @@ class ClipExperiment:
             # loss.backward()
             # self.optimizer.step()
             self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
+            if torch.isnan(loss):
+                print(f"loss is nan: [{loss.item()}, {output}, {label}, {idx}]")
+                grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
+                print(f"gradient: {grad_norm}") # 梯度消失了???
 
             # # 梯度裁剪 防止梯度过大loss变成nan
             self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
@@ -150,7 +150,7 @@ class ClipExperiment:
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 label = databatch["label"].to(self.device, dtype=torch.long)
 
-                embedding = self.model(ids, mask, pixel_values)
+                embedding = self.model(ids, mask)#  , pixel_values
                 loss = self.ent_loss(embedding, label)
                 pred = torch.argmax(embedding, dim=-1)
                 tot_loss += loss.item()

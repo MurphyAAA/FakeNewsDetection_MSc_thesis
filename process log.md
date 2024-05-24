@@ -217,4 +217,11 @@ clip
 >>- **summary** : \
     &nbsp;*1.* loss会增加，会变成nan
 >>- **note** : \
+>>- &nbsp;*1.:*
+>---
+>>- **index** : 25
+>>- **date** : 24/05/2024
+>>- **summary** : \
+    &nbsp;*1.* 某些 输入进clip得到的text-embedding  会变成nan
+>>- **note** : \
 >>- &nbsp;*1.:* 
