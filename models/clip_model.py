@@ -5,6 +5,8 @@
 @File ：clip_model.py
 @IDE ：PyCharm
 """
+import pdb
+
 import torch
 import transformers
 from transformers import CLIPModel, CLIPProcessor
@@ -23,7 +25,7 @@ class ClipClass(torch.nn.Module):
         self.l3 = torch.nn.Dropout(0.2)
         # self.l4 = torch.nn.Linear(128, 2)
         if opt["label_type"] == "2_way":
-            self.l4 = torch.nn.Linear(1024, 2)
+            self.l4 = torch.nn.Linear(512, 2) # 只有text。没有image 所以临时改成512
         elif opt["label_type"] == "3_way":
             self.l4 = torch.nn.Linear(1024, 3)
         else:  # 6_way
@@ -32,8 +34,10 @@ class ClipClass(torch.nn.Module):
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
     def forward(self, ids, mask, pixel_values=None):
-        output_1 = self.model(input_ids=ids, attention_mask=mask)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
-        text_embeds = output_1.text_embeds  # 用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
+        # output_1 = self.model(input_ids=ids, attention_mask=mask)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
+        # text_embeds = output_1.text_embeds  # 用这个去训练，不要用logit ！！！！！！！！！！  要用embedding和ground truth直接计算loss 还是要加一个FC层？
+        text_embeds = self.model.get_text_features(input_ids=ids, attention_mask=mask)
+        text_embeds = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
         print(f"------------------------------------------image embed:img_embeds, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
         # output_2_img = self.l2(img_embeds)
         # output_2_text = self.l2(text_embeds)
