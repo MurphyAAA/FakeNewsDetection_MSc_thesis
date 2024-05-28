@@ -44,9 +44,10 @@ class ClipExperiment:
 
         self.mse_loss = torch.nn.MSELoss()
         self.ent_loss = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
-                                          weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
-
+        # self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
+        #                                   weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
+        self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
+                                           weight_decay=0.2)
         # self.scaler = GradScaler()
         # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
 
@@ -84,10 +85,12 @@ class ClipExperiment:
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
 
-    def freeze_params(self, module):
-        for param in module.parameters():
-            param.requires_grad = False
-
+    # def freeze_params(self, module):
+    #     for param in module.parameters():
+    #         param.requires_grad = False
+    def freezeLayer(self, layerName, setState):
+        for param in layerName.parameters():
+            param.requires_grad = not setState
     def train(self, epoch):
         tot_loss = 0
         print_loss = 0
@@ -112,10 +115,11 @@ class ClipExperiment:
             loss.backward()
             self.optimizer.step()
             # self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
+            grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
+            print(f"gradient: {grad_norm}")
             if torch.isnan(loss):
                 print(f"loss is nan: [{loss.item()}, {output}, {label}, {idx}]")
-                grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
-                print(f"gradient: {grad_norm}") # 梯度消失了???
+                # print(f"gradient: {grad_norm}") # 梯度消失了???
 
             # # 梯度裁剪 防止梯度过大loss变成nan
             # self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的

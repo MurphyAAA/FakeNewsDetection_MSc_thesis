@@ -20,6 +20,10 @@ class ClipClass(torch.nn.Module):
             self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
         else:  # clip_large
             self.model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
+
+        # 冻结CLIP模型的参数
+        for param in self.model.parameters():
+            param.requires_grad = False
         # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
         # self.l2 = torch.nn.Linear(512,64) # ***********这一层加不加后面再调整
         self.l3 = torch.nn.Dropout(0.2)
