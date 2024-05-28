@@ -47,7 +47,7 @@ class ClipExperiment:
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
                                           weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
 
-        self.scaler = GradScaler()
+        # self.scaler = GradScaler()
         # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
 
     def set_dataloader(self, train_loader, val_loader, test_loader):
@@ -67,7 +67,7 @@ class ClipExperiment:
             'model': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             # 'scheduler_state_dict': self.scheduler.state_dict(),
-            'scaler': self.scaler.state_dict()
+            # 'scaler': self.scaler.state_dict()
         }
         torch.save(checkpoint, path)
         print(f"Checkpoint saved at epoch {epoch}")
@@ -80,7 +80,7 @@ class ClipExperiment:
         self.model.to(self.device)
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         # self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-        self.scaler.load_state_dict(checkpoint['scaler'])
+        # self.scaler.load_state_dict(checkpoint['scaler'])
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
 
@@ -97,32 +97,32 @@ class ClipExperiment:
         for idx, databatch in enumerate(self.train_loader):
             ids = databatch["ids"].to(self.device, dtype=torch.long)
             mask = databatch["mask"].to(self.device, dtype=torch.long)
-            # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
             label = databatch["label"].to(self.device, dtype=torch.long)
-            with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
-                    # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
-                    # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
-                output = self.model(ids, mask) # self.model(ids, mask, pixel_values)
-                self.optimizer.zero_grad()
-                loss = self.ent_loss(output, label)
+        # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
+                # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
+                # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
+            output = self.model(ids, mask, pixel_values)
+            self.optimizer.zero_grad()
+            loss = self.ent_loss(output, label)
             tot_loss += loss.item()
             print_loss += loss.item()
 
             self.optimizer.zero_grad()
-            # loss.backward()
-            # self.optimizer.step()
-            self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
+            loss.backward()
+            self.optimizer.step()
+            # self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
             if torch.isnan(loss):
                 print(f"loss is nan: [{loss.item()}, {output}, {label}, {idx}]")
                 grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
                 print(f"gradient: {grad_norm}") # 梯度消失了???
 
             # # 梯度裁剪 防止梯度过大loss变成nan
-            self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
+            # self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-            self.scaler.step(self.optimizer)  # 来更新模型参数。
-            self.scaler.update()  # 来更新模型参数。
+            # self.scaler.step(self.optimizer)  # 来更新模型参数。
+            # self.scaler.update()  # 来更新模型参数。
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
                 loader_time = (end_time - start_time)
@@ -147,10 +147,10 @@ class ClipExperiment:
             for _, databatch in enumerate(self.val_loader):
                 ids = databatch["ids"].to(self.device, dtype=torch.long)
                 mask = databatch["mask"].to(self.device, dtype=torch.long)
-                # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+                pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 label = databatch["label"].to(self.device, dtype=torch.long)
 
-                embedding = self.model(ids, mask)#  , pixel_values
+                embedding = self.model(ids, mask, pixel_values)#  , pixel_values
                 loss = self.ent_loss(embedding, label)
                 pred = torch.argmax(embedding, dim=-1)
                 tot_loss += loss.item()
