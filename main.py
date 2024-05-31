@@ -1,4 +1,5 @@
 import os.path
+import pdb
 
 from parse_args import parse_arguments
 from preprocessing.load_data import build_dataloader, prepare_dataset
@@ -93,7 +94,7 @@ def main(opt):
         trainer = Trainer(
             model=experiment.model,
             args=training_args,
-            data_collator=experiment.collate_fn,
+            # data_collator=experiment.collate_fn,
             train_dataset=train_set,
             eval_dataset=val_set,
             tokenizer=experiment.processor,
