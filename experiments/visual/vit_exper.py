@@ -64,8 +64,9 @@ class VitExperiment:
         #     labels = databatch["labels"].to(self.device, dtype=torch.long)
         #     pdb.set_trace()
     def collate_fn(self, batch):
-        print(torch.stack([x['pixel_values'] for x in batch]).shape)
+        # print(torch.stack([x['pixel_values'] for x in batch]).shape) # 看一下是不是构建batch有问题，导致和attention head对不上，12*16
+
         return {
-            'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
-            'labels': torch.tensor([x['labels'] for x in batch])
+            'pixel_values': torch.squeeze(torch.stack([x['pixel_values'] for x in batch]), dim=1),
+            'labels': torch.squeeze(torch.tensor([x['labels'] for x in batch]), dim=1)
         }
