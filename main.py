@@ -1,16 +1,13 @@
 import os.path
 
-import torch
-
 from parse_args import parse_arguments
-from preprocessing.load_data import build_dataloader
-from experiments.bert_exper import BertExperiment
+from preprocessing.load_data import build_dataloader, prepare_dataset
+from experiments.text.bert_exper import BertExperiment
 from experiments.clip_exper import ClipExperiment
+from experiments.visual.vit_exper import VitExperiment
 from sklearn import metrics
-import time
-import pdb
 import sys
-
+from transformers import Trainer, TrainingArguments
 """
 之后用 bert、clip提取特征，fine-tune clip、bert
 要求的意思是只用bert或clip提取特征么？而不是直接用那个模型？？
@@ -42,10 +39,8 @@ def main(opt):
         if os.path.exists(fileName):
             print("loading model")
             start_epoch = experiment.load_clip_checkpoint(fileName)
-            # start_epoch += 1
         else:
             start_epoch = 0
-            # tot_loss = 0
         # train
         print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
@@ -58,8 +53,66 @@ def main(opt):
             evaluation(labels, predicts, True)
         else:  # 3/6_way
             evaluation(labels, predicts, False)
+    elif opt["model"] == "vit" or opt["model"] == "vit_large":
+        experiment = VitExperiment(opt)
+        # train_loader, val_loader, test_loader = build_dataloader(opt, experiment.processor)
+        # experiment.set_dataloader(train_loader, val_loader, test_loader)
+        # filename = f'{opt["output_path"]}/checkpoint/{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
+        # if os.path.exists(filename):
+        #     print("loading model")
+        #     start_epoch = experiment.load_checkpoint(filename)
+        # else:
+        #     start_epoch=0
+        print("training")
+        # for epoch in range(start_epoch, opt['num_epochs']):
+        #     epoch_time = experiment.train(epoch)
+        #     experiment.save_checkpoint(
+        #         f'{opt["output_path"]}/checkpoint_freeze_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+        #     print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        # print("validation")
+        # predicts, labels = experiment.validation()
+        # if opt["label_type"] == "2_way":
+        #     evaluation(labels, predicts, True)
+        # else:  # 3/6_way
+        #     evaluation(labels, predicts, False)
 
-
+        training_args = TrainingArguments(
+            output_dir=f'{opt["output_path"]}/vit',
+            evaluation_strategy='epoch',
+            per_device_train_batch_size=opt["batch_size"],
+            per_device_eval_batch_size=opt["batch_size"],
+            num_train_epochs=opt["num_epochs"],
+            fp16=True,
+            save_strategy='epoch',
+            logging_dir=f'{opt["output_path"]}/vit',
+            logging_steps=opt["print_every"],
+            remove_unused_columns=False,
+            load_best_model_at_end=True,
+        )
+        train_set, val_set, test_set = prepare_dataset(opt, experiment.processor)
+        trainer = Trainer(
+            model=experiment.model,
+            args=training_args,
+            data_collator=experiment.collate_fn,
+            train_dataset=train_set,
+            eval_dataset=val_set,
+            tokenizer=experiment.processor,
+            compute_metrics=compute_metrics,
+        )
+        train_results = trainer.train()
+        trainer.save_model()
+        trainer.log_metrics("train", train_results.metrics)
+        trainer.save_metrics("train", train_results.metrics)
+        trainer.save_state()
+        metrics = trainer.evaluate(val_set)
+        trainer.log_metrics("eval", metrics)
+        trainer.save_metrics("eval", metrics)
+def compute_metrics(eval_pred):
+    labels = eval_pred.label_ids
+    preds = eval_pred.predictions.argmax(-1)
+    accuracy = metrics.accuracy_score(labels, preds)
+    f1 = metrics.f1_score(labels, preds, average='macro')
+    return {"accuracy": accuracy, "f1": f1}
 def evaluation(labels, predicts, two_way):
     if two_way:  # 2_way
         acc = metrics.accuracy_score(labels, predicts)

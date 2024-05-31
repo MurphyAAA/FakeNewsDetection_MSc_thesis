@@ -13,6 +13,7 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image, ImageFile
 import preprocessing
+from datasets import Dataset as D
 from torchvision import transforms
 import os
 
@@ -102,7 +103,8 @@ class CustomDataset_Clip(Dataset):
         except Image.DecompressionBombWarning:
             print(f"图片过大 {self.img_id[index]}")
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
-        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", truncation=True) # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
+        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length",
+                                     truncation=True)  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
 
         ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
         mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
@@ -115,6 +117,30 @@ class CustomDataset_Clip(Dataset):
             # 'label': torch.tensor(self.label[index], dtype=torch.long)
             "label": self.label[index]
         }
+
+
+class CustomDataset_Vit(Dataset):
+    def __init__(self, dataframe, feature_extractor, data_path):
+        self.feature_extractor = feature_extractor
+        self.data = dataframe
+        self.label = dataframe["label"]
+        self.img_id = dataframe["id"]
+        self.data_path = data_path
+
+    def __len__(self):
+        return len(self.label)
+
+    def __getitem__(self, index):
+        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+
+        # try:
+        img = Image.open(img_path)
+        # except Image.DecompressionBombWarning:
+        #     print(f"图片过大 {self.img_id[index]}")
+        inputs = self.feature_extractor(images=img,
+                                        return_tensors="pt")  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
+        inputs["labels"] = self.label[index]
+        return inputs
 
 
 def read_file(data_path, filename):
@@ -182,7 +208,7 @@ def load_dataset(opt):
     return df_train_filter, df_val_filter, df_test_filter
 
 
-def build_dataloader(opt, clip_processor=None):
+def build_dataloader(opt, processor=None):
     df_train, df_val, df_test = load_dataset(opt)
     print(df_train.head())
     print(f'training set:{df_train.shape}')
@@ -203,10 +229,13 @@ def build_dataloader(opt, clip_processor=None):
         val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
         test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/clip_large
-        train_set = CustomDataset_Clip(df_train, clip_processor, opt['data_path'])
-        val_set = CustomDataset_Clip(df_val, clip_processor, opt['data_path'])
-        test_set = CustomDataset_Clip(df_test, clip_processor, opt['data_path'])
-
+        train_set = CustomDataset_Clip(df_train, processor, opt['data_path'])
+        val_set = CustomDataset_Clip(df_val, processor, opt['data_path'])
+        test_set = CustomDataset_Clip(df_test, processor, opt['data_path'])
+    elif opt["model"] == "vit" or opt["model"] == "vit_large":
+        train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
+        val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
+        test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
                     'shuffle': False}
@@ -222,6 +251,7 @@ def build_dataloader(opt, clip_processor=None):
     test_loader = DataLoader(test_set, **test_params)
     return train_loader, val_loader, test_loader
 
+
 # def collate_fn(batch):
 #     filtered_batch = [data for data in batch if data is not None]
 #     # 如果剩余样本为空，则返回空列表
@@ -230,3 +260,25 @@ def build_dataloader(opt, clip_processor=None):
 #
 #     # 否则，构建完整的批次
 #     return torch.utils.data._utils.collate.default_collate(filtered_batch)
+
+def prepare_dataset(opt, processor):
+    df_train, df_val, df_test = load_dataset(opt)
+
+    def transform(example_batch):
+        # Take a list of PIL images and turn them to pixel values
+        inputs = processor([Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg') for x in example_batch['id']],
+                           return_tensors='pt')
+        pdb.set_trace()
+        # Don't forget to include the labels!
+        inputs['labels'] = example_batch['label']
+        return inputs
+
+    train_set = D.from_pandas(df_train)
+    val_set = D.from_pandas(df_val)
+    test_set = D.from_pandas(df_test)
+
+    train_set = train_set.with_transform(transform)
+    val_set = val_set.with_transform(transform)
+    test_set = test_set.with_transform(transform)
+
+    return train_set, val_set, test_set
