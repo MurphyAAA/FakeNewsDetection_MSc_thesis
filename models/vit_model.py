@@ -6,7 +6,7 @@
 @IDE ：PyCharm
 """
 import torch
-from transformers import ViTForImageClassification, ViTImageProcessor
+from transformers import ViTForImageClassification
 
 class VitClass(torch.nn.Module):
     def __init__(self,opt):

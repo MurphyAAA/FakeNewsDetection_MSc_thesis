@@ -33,7 +33,7 @@ def main(opt):
 
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/ clip_large
         experiment = ClipExperiment(opt)
-        train_loader, val_loader, test_loader = build_dataloader(opt, clip_processor=experiment.processor)
+        train_loader, val_loader, test_loader = build_dataloader(opt, processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         fileName = f'{opt["output_path"]}/checkpoint_freeze_{opt["model"]}_epoch_1_{opt["label_type"]}.pth'
         if os.path.exists(fileName):

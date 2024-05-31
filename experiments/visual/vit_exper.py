@@ -20,7 +20,7 @@ class VitExperiment:
         self.model = VitClass(opt)
         # model() 调用__call__()
         self.model.to(self.device)
-        self.processor = ViTImageProcessor.from_pretrained('google/vit-large-patch16-224')
+        self.processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
         self.train_loader = None
         self.val_loader = None
         self.test_loader = None
