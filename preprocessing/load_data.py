@@ -268,7 +268,6 @@ def prepare_dataset(opt, processor):
         # Take a list of PIL images and turn them to pixel values
         inputs = processor([Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg') for x in example_batch['id']],
                            return_tensors='pt')
-        pdb.set_trace()
         # Don't forget to include the labels!
         inputs['labels'] = example_batch['label']
         return inputs
