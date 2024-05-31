@@ -64,6 +64,7 @@ class VitExperiment:
         #     labels = databatch["labels"].to(self.device, dtype=torch.long)
         #     pdb.set_trace()
     def collate_fn(self, batch):
+        print(torch.stack([x['pixel_values'] for x in batch]).shape)
         return {
             'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
             'labels': torch.tensor([x['labels'] for x in batch])
