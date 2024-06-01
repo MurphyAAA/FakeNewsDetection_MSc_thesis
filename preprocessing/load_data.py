@@ -266,8 +266,8 @@ def prepare_dataset(opt, processor):
 
     def transform(example_batch):
         # Take a list of PIL images and turn them to pixel values
-        inputs = processor([Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg') for x in example_batch['id']],
-                           return_tensors='pt')
+        images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in example_batch['id']]
+        inputs = processor(images, return_tensors='pt')
         # Don't forget to include the labels!
         inputs['labels'] = example_batch['label']
         return inputs
