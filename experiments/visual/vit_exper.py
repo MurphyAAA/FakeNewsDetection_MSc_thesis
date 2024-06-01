@@ -67,6 +67,7 @@ class VitExperiment:
         print(torch.stack([x['pixel_values'] for x in batch]).shape) # 看一下是不是构建batch有问题，导致和attention head对不上，12*16
 
         return {
-            'pixel_values': torch.squeeze(torch.stack([x['pixel_values'] for x in batch]), dim=1),
+            # 'pixel_values': torch.squeeze(torch.stack([x['pixel_values'] for x in batch]), dim=1),
+            'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
             'labels': torch.tensor([x['labels'] for x in batch])
         }
