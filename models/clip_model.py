@@ -22,8 +22,8 @@ class ClipClass(torch.nn.Module):
             self.model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
 
         # 冻结CLIP模型的参数
-        for param in self.model.parameters():
-            param.requires_grad = False
+        # for param in self.model.parameters():
+        #     param.requires_grad = False
         # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
         # self.l2 = torch.nn.Linear(512,64) # ***********这一层加不加后面再调整
         self.l3 = torch.nn.Dropout(0.2)
@@ -38,7 +38,7 @@ class ClipClass(torch.nn.Module):
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
     def forward(self, ids, mask, pixel_values=None):
-        output_1 = self.model(input_ids=ids, attention_mask=mask, pixel_values=pixel_values)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
+        output_1 = self.model(input_ids=ids, attention_mask=mask, pixel_values=pixel_values, output_hidden_states=True)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
         text_embeds, img_embeds = output_1.text_embeds, output_1.image_embeds
         # text_embeds = self.model.get_text_features(input_ids=ids, attention_mask=mask)
         # text_embeds = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
