@@ -79,14 +79,14 @@ def main(opt):
         #     evaluation(labels, predicts, False)
 
         training_args = TrainingArguments(
-            output_dir=f'{opt["output_path"]}/vit',
+            output_dir=f'{opt["output_path"]}/vit_{opt["label_type"]}',
             evaluation_strategy='epoch',
             per_device_train_batch_size=opt["batch_size"],
             per_device_eval_batch_size=opt["batch_size"],
             num_train_epochs=opt["num_epochs"],
             fp16=True,
             save_strategy='epoch',
-            logging_dir=f'{opt["output_path"]}/vit',
+            logging_dir=f'{opt["output_path"]}/vit_{opt["label_type"]}',
             logging_steps=opt["print_every"],
             remove_unused_columns=False,
             load_best_model_at_end=True,
