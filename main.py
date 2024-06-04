@@ -37,7 +37,7 @@ def main(opt):
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader = build_dataloader(opt, processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        fileName = f'{opt["output_path"]}/checkpoint_freeze_{opt["model"]}_epoch_1_{opt["label_type"]}.pth'
+        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
         if os.path.exists(fileName):
             print("loading model")
             start_epoch = experiment.load_clip_checkpoint(fileName)
@@ -47,7 +47,7 @@ def main(opt):
         print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
-            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_freeze_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         print("validation")
         predicts, labels = experiment.validation()
