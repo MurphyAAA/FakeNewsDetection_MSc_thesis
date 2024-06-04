@@ -33,7 +33,7 @@ score
 subreddit	
 title	
 upvote_ratio	
-2_way_label	
+2_way_label	0:fake, 1:true
 3_way_label	 0: complete true, 1: sample is fake text is true, 2: sample is fake with false text
 6_way_label
 

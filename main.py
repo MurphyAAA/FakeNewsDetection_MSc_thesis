@@ -9,6 +9,7 @@ from experiments.visual.vit_exper import VitExperiment
 from sklearn import metrics
 import sys
 from transformers import Trainer, TrainingArguments
+import numpy as np
 """
 之后用 bert、clip提取特征，fine-tune clip、bert
 要求的意思是只用bert或clip提取特征么？而不是直接用那个模型？？
@@ -111,9 +112,28 @@ def main(opt):
 def compute_metrics(eval_pred):
     labels = eval_pred.label_ids
     preds = eval_pred.predictions.argmax(-1)
+
     accuracy = metrics.accuracy_score(labels, preds)
-    f1 = metrics.f1_score(labels, preds, average='macro')
-    return {"accuracy": accuracy, "f1": f1}
+    f1 = metrics.f1_score(labels, preds, average=None)
+    f1_macro = metrics.f1_score(labels, preds, average='macro')
+
+    recall = metrics.recall_score(labels, preds, average=None)
+    recall_macro = metrics.recall_score(labels, preds, average="macro")
+
+    conf_matrix = metrics.confusion_matrix(labels, preds)
+    # 2-way
+
+    # FRR = conf_matrix[0,1]/(conf_matrix[0,1]+conf_matrix[0,0])# False Real Rate:  That is, how much false news is mistakenly believed to be true news =错误当成真消息数/假消息总数
+
+    # 3-way/6-way
+    FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:,:])
+    # FRR = (conf_matrix[1,0]+conf_matrix[2,0]) / (conf_matrix[1,0]+conf_matrix[1,1]+conf_matrix[1,2]+
+    #                                              conf_matrix[2,0]+conf_matrix[2,1]+conf_matrix[2,2])
+    return {"accuracy": accuracy,
+            "f1": f1, "f1_marco": f1_macro,
+            "recall":recall, "recall_macro": recall_macro,
+            "False Real Rate:": FRR
+            }
 def evaluation(labels, predicts, two_way):
     if two_way:  # 2_way
         acc = metrics.accuracy_score(labels, predicts)
@@ -124,16 +144,20 @@ def evaluation(labels, predicts, two_way):
         f1 = metrics.f1_score(labels, predicts)  # 3/6_way
         f1_macro = metrics.f1_score(labels, predicts, average="macro")
         conf_matrix = metrics.confusion_matrix(labels, predicts)
-        TN = conf_matrix[0, 0]
-        FP = conf_matrix[0, 1]
-        FPR = FP / (FP + TN)
+        # TN = conf_matrix[0, 0]
+        # FP = conf_matrix[0, 1]
+        # FN = conf_matrix[1, 0]
+        # TP = conf_matrix[1, 1]
+        # FPR = FP / (FP + TN)
+
+        FRR = conf_matrix[0,1]/(conf_matrix[0,1]+conf_matrix[0,0])
         print("—————————— RESULT ——————————")
         print(f'**acc** :       【{acc * 100:.2f}%】')
         print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
         print(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
         print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
         print(f'**conf_matrix**:\n【{conf_matrix}】')
-        print(f'**FPR** :       【{FPR}】')
+        print(f'**FPR** :       【{FRR}】')
     else:  # 3/6_way
         acc = metrics.accuracy_score(labels, predicts)
         precision = metrics.precision_score(labels, predicts, average=None)  # 3/6_way
@@ -146,15 +170,16 @@ def evaluation(labels, predicts, two_way):
         # TN = conf_matrix[0,0]
         # FP = conf_matrix[0,1]
         # FPR = FP/(FP+TN)
-        FPR = (conf_matrix[1, 0] + conf_matrix[2, 0]) / (
-                conf_matrix.sum() - conf_matrix.diagonal().sum())  # how many fake news be trated as true in the false classified cases
+        # FPR = (conf_matrix[1, 0] + conf_matrix[2, 0]) / (
+        #         conf_matrix.sum() - conf_matrix.diagonal().sum())  # how many fake news be trated as true in the false classified cases
+        FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
         print("—————————— RESULT ——————————")
         print(f'**acc** :       【{acc * 100:.2f}%】')
         print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
         print(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
         print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
         print(f'**conf_matrix**:\n【{conf_matrix}】')
-        print(f'**FPR** :       【{FPR}】')
+        print(f'**FPR** :       【{FRR}】')
 
 
 if __name__ == '__main__':
