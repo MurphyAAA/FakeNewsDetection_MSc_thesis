@@ -103,6 +103,7 @@ class CustomDataset_Clip(Dataset):
         except Image.DecompressionBombWarning:
             print(f"图片过大 {self.img_id[index]}")
             # 检查图像的通道数
+        print(self.img_id[index])
         if img.mode != "RGB":
             raise ValueError(f"图像 {self.img_id[index]} 不是 RGB 模式。实际模式: {img.mode}")
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
@@ -112,7 +113,7 @@ class CustomDataset_Clip(Dataset):
         ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
         mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
         pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
-
+        print(f"ids:{ids.shape}, mask:{mask.shape}, pixel_value:{pixel_values.shape}")
         return {
             'ids': ids.clone().detach(),
             'mask': mask.clone().detach(),

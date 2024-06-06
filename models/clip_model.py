@@ -42,7 +42,7 @@ class ClipClass(torch.nn.Module):
         text_embeds, img_embeds = output_1.text_embeds, output_1.image_embeds
         # text_embeds = self.model.get_text_features(input_ids=ids, attention_mask=mask)
         # text_embeds = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
-        print(f"------------------------------------------image embed:{img_embeds}, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
+        # print(f"------------------------------------------image embed:{img_embeds}, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
         # output_2_img = self.l2(img_embeds)
         # output_2_text = self.l2(text_embeds)
         # combined_output = torch.cat((output_2_text, output_2_img), dim=1)
