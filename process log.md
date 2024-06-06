@@ -225,3 +225,11 @@ clip
     &nbsp;*1.* 某些 输入进clip得到的text-embedding  会变成nan
 >>- **note** : \
 >>- &nbsp;*1.:* 
+>---
+>>- **index** : 26
+>>- **date** : 06/06/2024
+>>- **summary** : \
+    &nbsp;*1.* ValueError: mean must have 1 elements if it is an iterable, got 3\
+    &nbsp;*2.* 
+>>- **note** : \
+>>- &nbsp;*1.:* 因为有的图片是1个channel的灰度图，与设定的3个通道的mean不匹配，所以要在open图片的时候加上.convert("RGB")
