@@ -99,7 +99,7 @@ class CustomDataset_Clip(Dataset):
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
         try:
-            img = Image.open(img_path)
+            img = Image.open(img_path).convert("RGB")
         except Image.DecompressionBombWarning:
             print(f"图片过大 {self.img_id[index]}")
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
