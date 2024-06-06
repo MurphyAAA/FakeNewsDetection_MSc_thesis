@@ -102,6 +102,9 @@ class CustomDataset_Clip(Dataset):
             img = Image.open(img_path).convert("RGB")
         except Image.DecompressionBombWarning:
             print(f"图片过大 {self.img_id[index]}")
+            # 检查图像的通道数
+        if img.mode != "RGB":
+            raise ValueError(f"图像 {self.img_id[index]} 不是 RGB 模式。实际模式: {img.mode}")
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
         inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length",
                                      truncation=True)  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
