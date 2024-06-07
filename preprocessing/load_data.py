@@ -107,9 +107,11 @@ class CustomDataset_Clip(Dataset):
         if img.mode != "RGB":
             raise ValueError(f"图像 {self.img_id[index]} 不是 RGB 模式。实际模式: {img.mode}")
         # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
-        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length",
-                                     truncation=True)  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
-
+        try:
+            inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length",
+                                         truncation=True)  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
+        except :
+            print(f"这个图片有问题: {self.img_id[index]}")
         ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
         mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
         pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
