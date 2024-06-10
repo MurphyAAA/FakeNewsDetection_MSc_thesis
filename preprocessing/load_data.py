@@ -14,6 +14,7 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from PIL import Image, ImageFile
 import preprocessing
 from datasets import Dataset as D
+from main import print_to_file
 from torchvision import transforms
 import os
 
@@ -113,7 +114,7 @@ class CustomDataset_Clip(Dataset):
         ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
         mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
         pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
-        print(f"{self.img_id[index]} pixel_value:{pixel_values.shape}")
+        print_to_file(f"{self.img_id[index]} pixel_value:{pixel_values.shape}")
         return {
             'ids': ids.clone().detach(),
             'mask': mask.clone().detach(),
@@ -214,10 +215,10 @@ def load_dataset(opt):
 
 def build_dataloader(opt, processor=None):
     df_train, df_val, df_test = load_dataset(opt)
-    print(df_train.head())
-    print(f'training set:{df_train.shape}')
-    print(f'validation set:{df_val.shape}')
-    print(f'testing set:{df_test.shape}')
+    print_to_file(df_train.head())
+    print_to_file(f'training set:{df_train.shape}')
+    print_to_file(f'validation set:{df_val.shape}')
+    print_to_file(f'testing set:{df_test.shape}')
     # maxlen=0
     # totlen=0
     # for text in df_train["clean_title"]: #看一下text的最大长度

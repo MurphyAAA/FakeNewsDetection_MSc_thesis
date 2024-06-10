@@ -10,6 +10,7 @@ from sklearn import metrics
 import sys
 from transformers import Trainer, TrainingArguments
 import numpy as np
+
 """
 之后用 bert、clip提取特征，fine-tune clip、bert
 要求的意思是只用bert或clip提取特征么？而不是直接用那个模型？？
@@ -24,7 +25,7 @@ def main(opt):
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         for epoch in range(opt["num_epochs"]):
             epoch_time = experiment.train(epoch)
-            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+            print_to_file(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
         predicts, labels = experiment.validate()
         # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
@@ -39,17 +40,18 @@ def main(opt):
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
         if os.path.exists(fileName):
-            print("loading model")
+            print_to_file("loading model")
             start_epoch = experiment.load_clip_checkpoint(fileName)
         else:
             start_epoch = 0
         # train
-        print("training")
+        print_to_file("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
-            experiment.save_clip_checkpoint(f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
-            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
-        print("validation")
+            experiment.save_clip_checkpoint(
+                f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+            print_to_file(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        print_to_file("validation")
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
             evaluation(labels, predicts, True)
@@ -109,6 +111,8 @@ def main(opt):
         metrics = trainer.evaluate(val_set)
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
+
+
 def compute_metrics(eval_pred):
     labels = eval_pred.label_ids
     preds = eval_pred.predictions.argmax(-1)
@@ -126,14 +130,16 @@ def compute_metrics(eval_pred):
     # FRR = conf_matrix[0,1]/(conf_matrix[0,1]+conf_matrix[0,0])# False Real Rate:  That is, how much false news is mistakenly believed to be true news =错误当成真消息数/假消息总数
 
     # 3-way/6-way
-    FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:,:])
+    FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
     # FRR = (conf_matrix[1,0]+conf_matrix[2,0]) / (conf_matrix[1,0]+conf_matrix[1,1]+conf_matrix[1,2]+
     #                                              conf_matrix[2,0]+conf_matrix[2,1]+conf_matrix[2,2])
     return {"accuracy": accuracy,
             "f1": f1, "f1_marco": f1_macro,
-            "recall":recall, "recall_macro": recall_macro,
+            "recall": recall, "recall_macro": recall_macro,
             "False Real Rate:": FRR
             }
+
+
 def evaluation(labels, predicts, two_way):
     if two_way:  # 2_way
         acc = metrics.accuracy_score(labels, predicts)
@@ -150,14 +156,14 @@ def evaluation(labels, predicts, two_way):
         # TP = conf_matrix[1, 1]
         # FPR = FP / (FP + TN)
 
-        FRR = conf_matrix[0,1]/(conf_matrix[0,1]+conf_matrix[0,0])
-        print("—————————— RESULT ——————————")
-        print(f'**acc** :       【{acc * 100:.2f}%】')
-        print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
-        print(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
-        print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
-        print(f'**conf_matrix**:\n【{conf_matrix}】')
-        print(f'**FPR** :       【{FRR}】')
+        FRR = conf_matrix[0, 1] / (conf_matrix[0, 1] + conf_matrix[0, 0])
+        print_to_file("—————————— RESULT ——————————")
+        print_to_file(f'**acc** :       【{acc * 100:.2f}%】')
+        print_to_file(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
+        print_to_file(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
+        print_to_file(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
+        print_to_file(f'**conf_matrix**:\n【{conf_matrix}】')
+        print_to_file(f'**FPR** :       【{FRR}】')
     else:  # 3/6_way
         acc = metrics.accuracy_score(labels, predicts)
         precision = metrics.precision_score(labels, predicts, average=None)  # 3/6_way
@@ -173,17 +179,26 @@ def evaluation(labels, predicts, two_way):
         # FPR = (conf_matrix[1, 0] + conf_matrix[2, 0]) / (
         #         conf_matrix.sum() - conf_matrix.diagonal().sum())  # how many fake news be trated as true in the false classified cases
         FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
-        print("—————————— RESULT ——————————")
-        print(f'**acc** :       【{acc * 100:.2f}%】')
-        print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
-        print(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
-        print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
-        print(f'**conf_matrix**:\n【{conf_matrix}】')
-        print(f'**FPR** :       【{FRR}】')
+        print_to_file("—————————— RESULT ——————————")
+        print_to_file(f'**acc** :       【{acc * 100:.2f}%】')
+        print_to_file(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
+        print_to_file(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
+        print_to_file(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
+        print_to_file(f'**conf_matrix**:\n【{conf_matrix}】')
+        print_to_file(f'**FPR** :       【{FRR}】')
+
+
+def print_to_file(*args, **kwargs):
+    tmp_file = os.path.join(opt["tmp_dir"], 'temp_output.txt')
+    with open(tmp_file, 'w') as temp_file:
+        print(*args, **kwargs, file=temp_file)
 
 
 if __name__ == '__main__':
-    print(sys.path)
     opt = parse_arguments()
+
+    print_to_file(sys.path)
+    # print(sys.path)
     main(opt)
-    print("----finish----")
+    # print("----finish----")
+    print_to_file("----finish----")

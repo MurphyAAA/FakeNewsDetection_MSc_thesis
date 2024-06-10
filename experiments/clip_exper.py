@@ -10,6 +10,7 @@ import torch
 from transformers import CLIPProcessor
 from models.clip_model import ClipClass
 import time
+from main import print_to_file
 from torch.cuda.amp import autocast, GradScaler
 import pdb
 
@@ -71,7 +72,7 @@ class ClipExperiment:
             # 'scaler': self.scaler.state_dict()
         }
         torch.save(checkpoint, path)
-        print(f"Checkpoint saved at epoch {epoch}")
+        print_to_file(f"Checkpoint saved at epoch {epoch}")
 
     def load_clip_checkpoint(self, path):
         checkpoint = torch.load(path)
@@ -82,7 +83,7 @@ class ClipExperiment:
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         # self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         # self.scaler.load_state_dict(checkpoint['scaler'])
-        print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
+        print_to_file(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
 
     # def freeze_params(self, module):
@@ -116,9 +117,9 @@ class ClipExperiment:
             self.optimizer.step()
             # self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
             grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
-            print(f"gradient: {grad_norm}")
+            print_to_file(f"gradient: {grad_norm}")
             if torch.isnan(loss):
-                print(f"loss is nan: [{loss.item()}, {output}, {label}, {idx}]")
+                print_to_file(f"loss is nan: [{loss.item()}, {output}, {label}, {idx}]")
                 # print(f"gradient: {grad_norm}") # 梯度消失了???
 
             # # 梯度裁剪 防止梯度过大loss变成nan
@@ -133,9 +134,9 @@ class ClipExperiment:
                 epoch_time += loader_time
                 start_time = time.time()
                 if numpy.isnan(tot_loss / (idx + 1)):
-                    print(f"avg loss is nan: [ {tot_loss} / {(idx + 1)} ]")
+                    print_to_file(f"avg loss is nan: [ {tot_loss} / {(idx + 1)} ]")
 
-                print(
+                print_to_file(
                     f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
 
                 print_loss = 0
@@ -159,7 +160,7 @@ class ClipExperiment:
                 pred = torch.argmax(embedding, dim=-1)
                 tot_loss += loss.item()
                 if _ % self.opt["print_every"] == 0:
-                    print(
+                    print_to_file(
                         f" avg_loss: {tot_loss / (_ + 1)}")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 fin_label.extend(label.cpu().detach().tolist())
                 fin_output.extend(pred.cpu().detach().tolist())
