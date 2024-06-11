@@ -22,7 +22,6 @@ def parse_arguments():
 
     parse.add_argument('--output_path', type=str, default='result',
                         help='Where to create the output directory containing logs and weights.')
-    parse.add_argument('--temp_dir', type=str, required=True, help='Path to temporary directory.')
     parse.add_argument('--data_path', type=str, default='data/Fakeddit', help='Locate the Fakeddit dataset on disk.')
     # parse.add_argument('--data_path', type=str, default='./FakeNewsDetection_MSc_thesis/data/Fakeddit',
     #                    help='Locate the Fakeddit dataset on disk.')
