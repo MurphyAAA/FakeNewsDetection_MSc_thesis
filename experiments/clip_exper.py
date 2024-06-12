@@ -98,9 +98,13 @@ class ClipExperiment:
         self.model.train()
         start_time = time.time()
         for idx, databatch in enumerate(self.train_loader):
-            ids = databatch["ids"].to(self.device, dtype=torch.long)
-            mask = databatch["mask"].to(self.device, dtype=torch.long)
+            # ids = databatch["ids"].to(self.device, dtype=torch.long)
+            # mask = databatch["mask"].to(self.device, dtype=torch.long)
+            # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            ids = databatch["input_ids"].to(self.device, dtype=torch.long)
+            mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+
             label = databatch["label"].to(self.device, dtype=torch.long)
         # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
                 # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
@@ -116,7 +120,7 @@ class ClipExperiment:
             self.optimizer.step()
             # self.scaler.scale(loss).backward()  # 对缩放后的损失进行反向传播
             grad_norm = check_gradients(self.model) # 检查loss变成nan的时候是否梯度爆炸
-            print(f"gradient: {grad_norm}")
+            # print(f"gradient: {grad_norm}")
             if torch.isnan(loss):
                 print(f"loss is nan: [{loss.item()}, {output}, {label}, {idx}]")
                 # print(f"gradient: {grad_norm}") # 梯度消失了???
