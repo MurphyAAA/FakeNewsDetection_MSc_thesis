@@ -98,12 +98,12 @@ class ClipExperiment:
         self.model.train()
         start_time = time.time()
         for idx, databatch in enumerate(self.train_loader):
-            # ids = databatch["ids"].to(self.device, dtype=torch.long)
-            # mask = databatch["mask"].to(self.device, dtype=torch.long)
-            # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
-            ids = databatch["input_ids"].to(self.device, dtype=torch.long)
-            mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
+            ids = databatch["ids"].to(self.device, dtype=torch.long)
+            mask = databatch["mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            # ids = databatch["input_ids"].to(self.device, dtype=torch.long)
+            # mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
+            # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
 
             label = databatch["label"].to(self.device, dtype=torch.long)
         # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
