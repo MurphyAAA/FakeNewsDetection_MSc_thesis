@@ -124,6 +124,9 @@ def compute_metrics(eval_pred):
     recall = metrics.recall_score(labels, preds, average=None)
     recall_macro = metrics.recall_score(labels, preds, average="macro")
 
+    precision = metrics.precision_score(labels, preds, average=None)  # 2_way
+    precision_macro = metrics.precision_score(labels, preds, average="macro")
+
     conf_matrix = metrics.confusion_matrix(labels, preds)
     # 2-way
     if opt["label_type"] == '2_way':
@@ -136,6 +139,7 @@ def compute_metrics(eval_pred):
     return {"accuracy": accuracy,
             "f1": f1, "f1_marco": f1_macro,
             "recall": recall, "recall_macro": recall_macro,
+            "precision":precision, "precision_macro": precision_macro,
             "False Real Rate:": FRR
             }
 
