@@ -18,7 +18,7 @@ from torchvision import transforms
 import os
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-# Image.MAX_IMAGE_PIXELS = 631770000
+Image.MAX_IMAGE_PIXELS = 631770000
 """ data:
 author
 clean_title	:移除标点，数字，小写...
