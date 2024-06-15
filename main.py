@@ -118,13 +118,13 @@ def compute_metrics(eval_pred):
     preds = eval_pred.predictions.argmax(-1)
 
     accuracy = metrics.accuracy_score(labels, preds)
-    f1 = metrics.f1_score(labels, preds, average=None)
+    # f1 = metrics.f1_score(labels, preds, average=None)
     f1_macro = metrics.f1_score(labels, preds, average='macro')
 
-    recall = metrics.recall_score(labels, preds, average=None)
+    # recall = metrics.recall_score(labels, preds, average=None)
     recall_macro = metrics.recall_score(labels, preds, average="macro")
 
-    precision = metrics.precision_score(labels, preds, average=None)  # 2_way
+    # precision = metrics.precision_score(labels, preds, average=None)  # 2_way
     precision_macro = metrics.precision_score(labels, preds, average="macro")
 
     conf_matrix = metrics.confusion_matrix(labels, preds)
@@ -137,9 +137,9 @@ def compute_metrics(eval_pred):
     # FRR = (conf_matrix[1,0]+conf_matrix[2,0]) / (conf_matrix[1,0]+conf_matrix[1,1]+conf_matrix[1,2]+
     #                                              conf_matrix[2,0]+conf_matrix[2,1]+conf_matrix[2,2])
     return {"accuracy": accuracy,
-            "f1": f1, "f1_marco": f1_macro,
-            "recall": recall, "recall_macro": recall_macro,
-            "precision":precision, "precision_macro": precision_macro,
+            "f1_marco": f1_macro,
+            "recall_macro": recall_macro,
+            "precision_macro": precision_macro,
             "False Real Rate:": FRR
             }
 
