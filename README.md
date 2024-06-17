@@ -67,21 +67,21 @@
 <tr>
     <td rowspan="2">viison</td>
     <td>vit</td>
-    <td>84.92%</td>
-    <td>84.42%</td>
+    <td>83.98%</td>
+    <td>83.52%</td>
+    <td>84.28%</td>
+    <td>83.18</td>
+    <td>17.13%</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
+    <td>81%</td>
+    <td>67.34%</td>
+    <td>64.73%</td>
+    <td>75.17%</td>
+    <td>17.04%</td>
 </tr>
 <tr>
     <td>clip-vision</td>
