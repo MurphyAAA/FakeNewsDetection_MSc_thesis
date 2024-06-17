@@ -31,9 +31,9 @@ class ClipClass(torch.nn.Module):
         if opt["label_type"] == "2_way":
             self.l4 = torch.nn.Linear(512, 2) # 只有text。没有image 所以临时改成512
         elif opt["label_type"] == "3_way":
-            self.l4 = torch.nn.Linear(1024, 3)
+            self.l4 = torch.nn.Linear(512, 3)
         else:  # 6_way
-            self.l4 = torch.nn.Linear(1024, 6)
+            self.l4 = torch.nn.Linear(512, 6)
 
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
