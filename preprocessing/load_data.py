@@ -242,7 +242,7 @@ def build_dataloader(opt, processor=None):
         test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': False}
+                    'shuffle': True}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
