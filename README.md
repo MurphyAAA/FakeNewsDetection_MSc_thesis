@@ -48,11 +48,11 @@
 </tr>
 <tr>
     <td>clip-text</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
+    <td>80.26%</td>
+    <td>79.51%</td>
+    <td>79.80%</td>
+    <td>79.29%</td>
+    <td>18.06%</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
