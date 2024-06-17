@@ -96,35 +96,32 @@ class CustomDataset_Clip(Dataset):
         text = str(self.text[index])
         text = " ".join(text.split())
         # tokenized_text = self.tokenizer(text, truncate=True)
-        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+        # img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
 
         # try:
-        img = Image.open(img_path).convert("RGB")
+        # img = Image.open(img_path).convert("RGB")
         # except Image.DecompressionBombWarning:
         #     print(f"图片过大 {self.img_id[index]}")
         # 检查图像的通道数
         # print()
-        if img.mode != "RGB":
-            raise ValueError(f"图像 {self.img_id[index]} 不是 RGB 模式。实际模式: {img.mode}")
-        print(f"1 {self.img_id[index]}")
-        # inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length", **{"truncation":True})
-        inputs = self.clip_processor(text=text, images=img, return_tensors="pt", padding="max_length",
+        # if img.mode != "RGB":
+        #     raise ValueError(f"图像 {self.img_id[index]} 不是 RGB 模式。实际模式: {img.mode}")
+        # print(f"1 {self.img_id[index]}")
+        inputs = self.clip_processor(text=text, return_tensors="pt", padding="max_length",
                                      truncation=True)  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
-        print(f"2 {self.img_id[index]}")
+        # print(f"2 {self.img_id[index]}")
         ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
         mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
-        pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
+        # pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
 
         # print(f"{self.img_id[index]} pixel_value:{pixel_values.shape}")
         return {
             'ids': ids.clone().detach(),
             'mask': mask.clone().detach(),
-            'pixel_values': pixel_values.clone().detach(),
+            # 'pixel_values': pixel_values.clone().detach(),
             # 'label': torch.tensor(self.label[index], dtype=torch.long)
             "label": self.label[index]
         }
-        # inputs["label"] = self.label[index]
-        # return inputs
 
 class CustomDataset_Vit(Dataset):
     def __init__(self, dataframe, feature_extractor, data_path):

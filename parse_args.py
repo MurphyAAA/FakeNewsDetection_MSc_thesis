@@ -11,9 +11,9 @@ def parse_arguments():
     parse = argparse.ArgumentParser()
 
     #hyperparams
-    parse.add_argument('--lr', type=float, default=1e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
+    parse.add_argument('--lr', type=float, default=5e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
     parse.add_argument('--num_epochs', type=int, default=3, help='Number of training epochs.') # 3
-    parse.add_argument('--batch_size', type=int, default=16)
+    parse.add_argument('--batch_size', type=int, default=32)
 
     parse.add_argument('--num_workers', type=int, default=1)
     parse.add_argument('--max_len', type=int, default=100) # 文本的最大长度
@@ -27,7 +27,7 @@ def parse_arguments():
     #                    help='Locate the Fakeddit dataset on disk.')
 
     parse.add_argument('--cpu', action='store_true', help='If set, the experiment will run on the CPU')
-    parse.add_argument('--model', type=str, default="vit", choices=['bert', 'clip', 'clip_large', 'vit', 'vit_large'])
+    parse.add_argument('--model', type=str, default="clip", choices=['bert', 'clip', 'clip_large', 'vit', 'vit_large'])
     parse.add_argument('--label_type', type=str, default="2_way", choices=['2_way', '3_way', '6_way'])
 
     #Build options dict
