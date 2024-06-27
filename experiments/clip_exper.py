@@ -98,17 +98,17 @@ class ClipExperiment:
         self.model.train()
         start_time = time.time()
         for idx, databatch in enumerate(self.train_loader):
-            ids = databatch["ids"].to(self.device, dtype=torch.long)
-            mask = databatch["mask"].to(self.device, dtype=torch.long)
-            # ids = databatch["input_ids"].to(self.device, dtype=torch.long)
-            # mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
-            # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            # ids = databatch["ids"].to(self.device, dtype=torch.long)
+            # mask = databatch["mask"].to(self.device, dtype=torch.long)
+            ids = databatch["input_ids"].to(self.device, dtype=torch.long)
+            mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
+            pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
 
             label = databatch["label"].to(self.device, dtype=torch.long)
         # with autocast():  # mixed precision training. Convert applicable model parameters to fp16  **********先不加混精度试一下
                 # logits_per_image, logits_per_text = self.model(**{"input_ids":ids, "attention_mask":mask, "pixel_values":pixel_values})
                 # output = self.model(input_ids=ids, pixel_values=pixel_values, attention_mask=mask, return_loss=True)
-            output = self.model(ids, mask)
+            output = self.model(ids, mask, pixel_values)
             self.optimizer.zero_grad()
             loss = self.ent_loss(output, label)
             tot_loss += loss.item()
@@ -151,13 +151,13 @@ class ClipExperiment:
         fin_label = []
         fin_output = []
         with torch.no_grad():
-            for _, databatch in enumerate(self.val_loader):
+            for _, databatch in enumerate(self.train_loader):
                 ids = databatch["ids"].to(self.device, dtype=torch.long)
                 mask = databatch["mask"].to(self.device, dtype=torch.long)
-                # pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+                pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 label = databatch["label"].to(self.device, dtype=torch.long)
 
-                embedding = self.model(ids, mask)#  , pixel_values
+                embedding = self.model(ids, mask, pixel_values)#  , pixel_values
                 loss = self.ent_loss(embedding, label)
                 pred = torch.argmax(embedding, dim=-1)
                 tot_loss += loss.item()
