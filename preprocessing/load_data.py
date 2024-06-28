@@ -182,11 +182,15 @@ class CustomDataset_Bert_Vit(Dataset):
         img = Image.open(img_path).convert("RGB")
 
         inputs = self.vit_processor(images=img, return_tensors="pt")
-        inputs["labels"] = self.label[index]
-        inputs["ids"] = torch.tensor(ids, dtype=torch.long)
-        inputs["mask"] = torch.tensor(mask, dtype=torch.long)
-        inputs["token_type_ids"] = torch.tensor(token_type_ids, dtype=torch.long)
-        return inputs
+        pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
+        pixel_values = torch.squeeze(pixel_values, dim=0)
+        return {
+            "pixel_values": pixel_values,
+            "ids": torch.tensor(ids, dtype=torch.long),
+            "mask": torch.tensor(mask, dtype=torch.long),
+            "token_type_ids": torch.tensor(token_type_ids, dtype=torch.long),
+            "labels": self.label[index]
+        }
 def read_file(data_path, filename):
     df = pd.read_csv(f'{data_path}/{filename}.tsv', delimiter='\t')
 
@@ -289,7 +293,7 @@ def build_dataloader(opt, processor=None):
         test_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': True}
+                    'shuffle': False}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
