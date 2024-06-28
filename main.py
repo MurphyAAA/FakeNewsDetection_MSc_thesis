@@ -6,6 +6,7 @@ from preprocessing.load_data import build_dataloader, prepare_dataset
 from experiments.text.bert_exper import BertExperiment
 from experiments.clip_exper import ClipExperiment
 from experiments.visual.vit_exper import VitExperiment
+from experiments.multimodal.bert_vit_exper import Bert_VitExperiment
 from sklearn import metrics
 import sys
 from transformers import Trainer, TrainingArguments
@@ -111,7 +112,24 @@ def main(opt):
         metrics = trainer.evaluate(val_set)
         trainer.log_metrics("eval", metrics)
         trainer.save_metrics("eval", metrics)
+    elif opt["model"] == "bert_vit":
+        experiment = Bert_VitExperiment(opt)
+        train_loader, val_loader, test_loader = build_dataloader(opt)
+        experiment.set_dataloader(train_loader, val_loader, test_loader)
 
+        start_epoch = 0
+        # train
+        print("training")
+        for epoch in range(start_epoch, opt['num_epochs']):
+            epoch_time = experiment.train(epoch)
+
+            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        print("validation")
+        predicts, labels = experiment.validation()
+        if opt["label_type"] == "2_way":
+            evaluation(labels, predicts, True)
+        else:  # 3/6_way
+            evaluation(labels, predicts, False)
 
 def compute_metrics(eval_pred):
     labels = eval_pred.label_ids
