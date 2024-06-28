@@ -5,6 +5,8 @@
 @File ：vit_model.py
 @IDE ：PyCharm
 """
+import pdb
+
 import torch
 from transformers import ViTForImageClassification
 
