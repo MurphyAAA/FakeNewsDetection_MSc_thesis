@@ -27,7 +27,7 @@ def parse_arguments():
     #                    help='Locate the Fakeddit dataset on disk.')
 
     parse.add_argument('--cpu', action='store_true', help='If set, the experiment will run on the CPU')
-    parse.add_argument('--model', type=str, default="clip", choices=['bert', 'clip', 'clip_large', 'vit', 'vit_large'])
+    parse.add_argument('--model', type=str, default="bert_vit", choices=['bert', 'clip', 'clip_large', 'vit', 'vit_large', 'bert_vit'])
     parse.add_argument('--label_type', type=str, default="2_way", choices=['2_way', '3_way', '6_way'])
 
     #Build options dict

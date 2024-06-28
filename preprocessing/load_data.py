@@ -10,7 +10,7 @@ import PIL
 import pandas as pd
 import torch
 from torch.utils.data import Dataset, DataLoader
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import BertTokenizer, BertForSequenceClassification, ViTImageProcessor
 from PIL import Image, ImageFile
 import preprocessing
 from datasets import Dataset as D
@@ -148,7 +148,45 @@ class CustomDataset_Vit(Dataset):
         inputs["labels"] = self.label[index]
         return inputs
 
+class CustomDataset_Bert_Vit(Dataset):
+    def __init__(self, dataframe, bert_tokenizer, max_len, vit_processor, data_path):
+        self.data = dataframe
+        self.bert_tokenizer = bert_tokenizer
+        self.max_len = max_len
+        self.vit_processor = vit_processor
+        self.text = dataframe["clean_title"]
+        self.label = dataframe["label"]
+        self.img_id = dataframe["id"]
+        self.data_path = data_path
 
+    def __len__(self):
+        return len(self.text)
+
+    def __getitem__(self, index):
+        text = str(self.text[index])
+        text = " ".join(text.split())
+        inputs = self.bert_tokenizer(
+            text,
+            None,
+            add_special_tokens=True,
+            max_length=self.max_len,
+            padding="max_length",
+            return_token_type_ids=True,
+            truncation=True
+        )
+        ids = inputs['input_ids']
+        mask = inputs['attention_mask']
+        token_type_ids = inputs["token_type_ids"]
+
+        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+        img = Image.open(img_path).convert("RGB")
+
+        inputs = self.vit_processor(images=img, return_tensors="pt")
+        inputs["labels"] = self.label[index]
+        inputs["ids"] = torch.tensor(ids, dtype=torch.long)
+        inputs["mask"] = torch.tensor(mask, dtype=torch.long)
+        inputs["token_type_ids"] = torch.tensor(token_type_ids, dtype=torch.long)
+        return inputs
 def read_file(data_path, filename):
     df = pd.read_csv(f'{data_path}/{filename}.tsv', delimiter='\t')
 
@@ -242,6 +280,13 @@ def build_dataloader(opt, processor=None):
         train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
         val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
         test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
+    elif opt["model"] == "bert_vit":
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
+
+        train_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+        val_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+        test_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
                     'shuffle': True}
