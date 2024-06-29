@@ -105,7 +105,6 @@ class CustomDataset_Clip(Dataset):
 # 打印张量信息
         print(f"张量形状: {tensor.shape}")  # 输出： torch.Size([3, 高度, 宽度])
         print(f"张量数据类型: {tensor.dtype}")  # 输出： torch.float32
-        pdb.set_trace()
         # 尝试一下循环open所有的图片，看看所有的图片是不是都能打开，应该可以。。。vit都行
         # except Image.DecompressionBombWarning:
         #     print(f"图片过大 {self.img_id[index]}")
