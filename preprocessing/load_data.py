@@ -160,7 +160,7 @@ class CustomDataset_Bert_Vit(Dataset):
         self.max_len = max_len
         self.vit_processor = vit_processor
         print(type(self.vit_processor))
-        print(self.vit_processor.image_mean)  # 应该输出 [0.48145466, 0.4578275, 0.40821073]
+        print(self.vit_processor.image_mean)
         self.text = dataframe["clean_title"]
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
@@ -186,7 +186,7 @@ class CustomDataset_Bert_Vit(Dataset):
         token_type_ids = inputs["token_type_ids"]
 
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
-        img = Image.open(img_path).convert("RGB")
+        img = Image.open(img_path)
 
         # inputs = self.vit_processor(images=img, return_tensors="pt")
         # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
@@ -298,7 +298,7 @@ def build_dataloader(opt, processor=None):
         train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
         val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
         test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
-    elif opt["model"] == "bert_vit": # 再试一下，实在不行，把这个换成prepare dataset那样
+    elif opt["model"] == "bert_vit": # 再试一下，实在不行，把这个换成prepare dataset那样！！！！！！！！！！！
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
 
@@ -319,7 +319,7 @@ def build_dataloader(opt, processor=None):
     val_loader = DataLoader(val_set, **val_params)
     test_loader = DataLoader(test_set, **test_params)
     return train_loader, val_loader, test_loader
-# def collate_fn(self, batch): 试一下自己构建batch
+# def collate_fn(self, batch): bert_vit试一下自己构建batch！！！！！！！
 #     # print(torch.stack([x['pixel_values'] for x in batch]).shape) # 看一下是不是构建batch有问题，导致和attention head对不上，12*16
 #
 #     return {
