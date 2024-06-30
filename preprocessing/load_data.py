@@ -192,6 +192,7 @@ class CustomDataset_Bert_Vit(Dataset):
         # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
         # pixel_values = torch.squeeze(pixel_values, dim=0)
         try:
+            print(f" index:{index} {self.img_id[index]}")
             inputs = self.vit_processor(images=img, return_tensors="pt")
             pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
             pixel_values = torch.squeeze(pixel_values, dim=0)
