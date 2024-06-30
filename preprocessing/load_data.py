@@ -137,7 +137,7 @@ class CustomDataset_Vit(Dataset):
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
         self.data_path = data_path
-
+        print(type(self.feature_extractor))
     def __len__(self):
         return len(self.label)
 
@@ -159,6 +159,8 @@ class CustomDataset_Bert_Vit(Dataset):
         self.bert_tokenizer = bert_tokenizer
         self.max_len = max_len
         self.vit_processor = vit_processor
+        print(type(self.vit_processor))
+        print(self.vit_processor.image_mean)  # 应该输出 [0.48145466, 0.4578275, 0.40821073]
         self.text = dataframe["clean_title"]
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
@@ -186,9 +188,16 @@ class CustomDataset_Bert_Vit(Dataset):
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
         img = Image.open(img_path).convert("RGB")
 
-        inputs = self.vit_processor(images=img, return_tensors="pt")
-        pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
-        pixel_values = torch.squeeze(pixel_values, dim=0)
+        # inputs = self.vit_processor(images=img, return_tensors="pt")
+        # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
+        # pixel_values = torch.squeeze(pixel_values, dim=0)
+        try:
+            inputs = self.vit_processor(images=img, return_tensors="pt")
+            pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
+            pixel_values = torch.squeeze(pixel_values, dim=0)
+        except ValueError as e:
+            print(f"Error processing image {img_path}: {e}")
+            raise
         return {
             "pixel_values": pixel_values,
             "ids": torch.tensor(ids, dtype=torch.long),
@@ -289,7 +298,7 @@ def build_dataloader(opt, processor=None):
         train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
         val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
         test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
-    elif opt["model"] == "bert_vit":
+    elif opt["model"] == "bert_vit": # 再试一下，实在不行，把这个换成prepare dataset那样
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
 
@@ -310,16 +319,15 @@ def build_dataloader(opt, processor=None):
     val_loader = DataLoader(val_set, **val_params)
     test_loader = DataLoader(test_set, **test_params)
     return train_loader, val_loader, test_loader
-
-
-# def collate_fn(batch):
-#     filtered_batch = [data for data in batch if data is not None]
-#     # 如果剩余样本为空，则返回空列表
-#     if len(filtered_batch) == 0:
-#         return []
+# def collate_fn(self, batch): 试一下自己构建batch
+#     # print(torch.stack([x['pixel_values'] for x in batch]).shape) # 看一下是不是构建batch有问题，导致和attention head对不上，12*16
 #
-#     # 否则，构建完整的批次
-#     return torch.utils.data._utils.collate.default_collate(filtered_batch)
+#     return {
+#         # 'pixel_values': torch.squeeze(torch.stack([x['pixel_values'] for x in batch]), dim=1),
+#         'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
+#         'labels': torch.tensor([x['labels'] for x in batch])
+#     }
+
 
 def prepare_dataset(opt, processor):
     df_train, df_val, df_test = load_dataset(opt)
