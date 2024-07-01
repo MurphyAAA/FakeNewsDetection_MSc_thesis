@@ -187,14 +187,15 @@ class CustomDataset_Bert_Vit(Dataset):
 
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
         img = Image.open(img_path)
-
+        print(img)
         # inputs = self.vit_processor(images=img, return_tensors="pt")
         # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
         # pixel_values = torch.squeeze(pixel_values, dim=0)
         try:
             print(f" index:{index} {self.img_id[index]}")
             inputs = self.vit_processor(images=img, return_tensors="pt")
-            pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
+            # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
+            pixel_values = inputs["pixel_values"].clone().detach()
             pixel_values = torch.squeeze(pixel_values, dim=0)
         except ValueError as e:
             print(f"Error processing image {img_path}: {e}")
