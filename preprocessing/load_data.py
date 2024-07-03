@@ -159,8 +159,6 @@ class CustomDataset_Bert_Vit(Dataset):
         self.bert_tokenizer = bert_tokenizer
         self.max_len = max_len
         self.vit_processor = vit_processor
-        print(type(self.vit_processor))
-        print(self.vit_processor.image_mean)
         self.text = dataframe["clean_title"]
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
@@ -186,15 +184,9 @@ class CustomDataset_Bert_Vit(Dataset):
         token_type_ids = inputs["token_type_ids"]
 
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
-        img = Image.open(img_path)
-        print(img)
-        # inputs = self.vit_processor(images=img, return_tensors="pt")
-        # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
-        # pixel_values = torch.squeeze(pixel_values, dim=0)
+        img = Image.open(img_path).convert("RGB")
         try:
-            print(f" index:{index} {self.img_id[index]}")
             inputs = self.vit_processor(images=img, return_tensors="pt")
-            # pixel_values = torch.tensor(inputs["pixel_values"], dtype=torch.float)
             pixel_values = inputs["pixel_values"].clone().detach()
             pixel_values = torch.squeeze(pixel_values, dim=0)
         except ValueError as e:
@@ -217,8 +209,7 @@ def read_file(data_path, filename):
 def load_dataset(opt):
     df_train = read_file(opt['data_path'], 'multimodal_train')
     df_val = read_file(opt['data_path'], 'multimodal_validate')
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')
-
+    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:300]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -245,8 +236,7 @@ def load_dataset(opt):
         df_val = df_val.rename(columns={"6_way_label": "label"})
         df_test = df_test.rename(columns={"6_way_label": "label"})
 
-    df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val,
-                                                                                                   df_test)
+    df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val, df_test)
     # new_df = df[["subreddit","2_way_label"]]
     # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
     # new_df = filter_df[["subreddit","2_way_label"]]
@@ -268,7 +258,6 @@ def load_dataset(opt):
     #     check_file("filter_image_train.txt", df_train)
     #     check_file("filter_image_val.txt", df_val)
     #     check_file("filter_image_test.txt", df_test)
-
     return df_train_filter, df_val_filter, df_test_filter
 
 
@@ -296,17 +285,18 @@ def build_dataloader(opt, processor=None):
         train_set = CustomDataset_Clip(df_train, processor, opt['data_path'])
         val_set = CustomDataset_Clip(df_val, processor, opt['data_path'])
         test_set = CustomDataset_Clip(df_test, processor, opt['data_path'])
-    elif opt["model"] == "vit" or opt["model"] == "vit_large":
-        train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
-        val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
-        test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
+    # elif opt["model"] == "vit" or opt["model"] == "vit_large":
+    #     train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
+    #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
+    #     test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     elif opt["model"] == "bert_vit": # 再试一下，实在不行，把这个换成prepare dataset那样！！！！！！！！！！！
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
-
-        train_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
-        val_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
-        test_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+    #
+    #     train_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+    #     val_set = CustomDataset_Bert_Vit(df_val, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+    #     test_set = CustomDataset_Bert_Vit(df_test, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+        train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
                     'shuffle': False}
@@ -350,5 +340,43 @@ def prepare_dataset(opt, processor):
     train_set = train_set.with_transform(transform)
     val_set = val_set.with_transform(transform)
     test_set = test_set.with_transform(transform)
+
+    return train_set, val_set, test_set
+
+def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
+    texts = [" ".join(str(x.split())) for x in example_batch["clean_title"]]
+    inputs=bert_processor(texts, None,
+        add_special_tokens=True,
+        max_length=opt["max_len"],
+        padding="max_length",
+        return_token_type_ids=True,
+        truncation=True)
+    ids = inputs['input_ids']
+    mask = inputs['attention_mask']
+    token_type_ids = inputs["token_type_ids"]
+
+    # Take a list of PIL images and turn them to pixel values
+    images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
+              example_batch['id']]
+    inputs = vit_processor(images, return_tensors='pt')
+    # Don't forget to include the labels!
+    inputs['labels'] = example_batch['label']
+    inputs['ids'] = torch.tensor(ids, dtype=torch.long)
+    inputs['mask'] = torch.tensor(mask, dtype=torch.long)
+    inputs["token_type_ids"] = torch.tensor(token_type_ids, dtype=torch.long)
+    return inputs
+def prepare_dataset_bert_vit(opt, bert_processor, vit_processor):
+    df_train, df_val, df_test = load_dataset(opt)
+    # 使用 functools.partial 固定住其他参数，只保留 example_batch
+    from functools import partial
+    transform_fn = partial(transform_bert_vit, bert_processor=bert_processor, vit_processor=vit_processor, opt=opt)
+
+    train_set = D.from_pandas(df_train)
+    val_set = D.from_pandas(df_val)
+    test_set = D.from_pandas(df_test)
+
+    train_set = train_set.with_transform(transform_fn)
+    val_set = val_set.with_transform(transform_fn)
+    test_set = test_set.with_transform(transform_fn)
 
     return train_set, val_set, test_set

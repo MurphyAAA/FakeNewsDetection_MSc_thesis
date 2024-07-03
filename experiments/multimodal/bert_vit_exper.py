@@ -34,13 +34,13 @@ class Bert_VitExperiment:
         epoch_time =0
         self.model.train()
         start_time = time.time()
+        epoch_start = time.time()
         for idx, databatch in enumerate(self.train_loader):
             ids = databatch["ids"].to(self.device, dtype=torch.long)
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
             labels = databatch["labels"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
-
             # 现在返回的就是一个1，要看一下模型输出，找到embedding
             logits = self.model(ids, mask, token_type_ids, pixel_values, labels)
 
@@ -54,11 +54,12 @@ class Bert_VitExperiment:
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
                 loader_time = (end_time - start_time)
-                epoch_time += loader_time
                 start_time = time.time()
                 print(
                     f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 print_loss = 0
+        epoch_end = time.time()
+        epoch_time = epoch_end- epoch_start
         return epoch_time
 
     def validation(self):
