@@ -98,10 +98,10 @@ class ClipExperiment:
         self.model.train()
         start_time = time.time()
         for idx, databatch in enumerate(self.train_loader):
-            ids = databatch["ids"].to(self.device, dtype=torch.long)
-            mask = databatch["mask"].to(self.device, dtype=torch.long)
-            # ids = databatch["input_ids"].to(self.device, dtype=torch.long)
-            # mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
+            # ids = databatch["ids"].to(self.device, dtype=torch.long)
+            # mask = databatch["mask"].to(self.device, dtype=torch.long)
+            ids = databatch["input_ids"].to(self.device, dtype=torch.long)
+            mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
 
             label = databatch["label"].to(self.device, dtype=torch.long)
@@ -152,8 +152,8 @@ class ClipExperiment:
         fin_output = []
         with torch.no_grad():
             for _, databatch in enumerate(self.train_loader):
-                ids = databatch["ids"].to(self.device, dtype=torch.long)
-                mask = databatch["mask"].to(self.device, dtype=torch.long)
+                ids = databatch["input_ids"].to(self.device, dtype=torch.long)
+                mask = databatch["attention_mask"].to(self.device, dtype=torch.long)
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 label = databatch["label"].to(self.device, dtype=torch.long)
 

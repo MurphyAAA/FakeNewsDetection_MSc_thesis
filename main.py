@@ -60,26 +60,7 @@ def main(opt):
             evaluation(labels, predicts, False)
     elif opt["model"] == "vit" or opt["model"] == "vit_large":
         experiment = VitExperiment(opt)
-        # train_loader, val_loader, test_loader = build_dataloader(opt, experiment.processor)
-        # experiment.set_dataloader(train_loader, val_loader, test_loader)
-        # filename = f'{opt["output_path"]}/checkpoint/{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
-        # if os.path.exists(filename):
-        #     print("loading model")
-        #     start_epoch = experiment.load_checkpoint(filename)
-        # else:
-        #     start_epoch=0
         print("training")
-        # for epoch in range(start_epoch, opt['num_epochs']):
-        #     epoch_time = experiment.train(epoch)
-        #     experiment.save_checkpoint(
-        #         f'{opt["output_path"]}/checkpoint_freeze_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
-        #     print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
-        # print("validation")
-        # predicts, labels = experiment.validation()
-        # if opt["label_type"] == "2_way":
-        #     evaluation(labels, predicts, True)
-        # else:  # 3/6_way
-        #     evaluation(labels, predicts, False)
 
         training_args = TrainingArguments(
             output_dir=f'{opt["output_path"]}/vit1_{opt["label_type"]}',

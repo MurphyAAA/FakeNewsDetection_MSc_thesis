@@ -99,12 +99,12 @@ class CustomDataset_Clip(Dataset):
 
         # try:
         img = Image.open(img_path).convert("RGB")
-        print(f"index:{index}, image id:{self.img_id[index]}, image:\n{img}") #看看有问题的image有啥不同！！！！
-        convert_tensor = transforms.ToTensor()
-        tensor = convert_tensor(img)
+        # print(f"index:{index}, image id:{self.img_id[index]}, image:\n{img}") #看看有问题的image有啥不同！！！！
+        # convert_tensor = transforms.ToTensor()
+        # tensor = convert_tensor(img)
 # 打印张量信息
-        print(f"张量形状: {tensor.shape}")  # 输出： torch.Size([3, 高度, 宽度])
-        print(f"张量数据类型: {tensor.dtype}")  # 输出： torch.float32
+#         print(f"张量形状: {tensor.shape}")  # 输出： torch.Size([3, 高度, 宽度])
+#         print(f"张量数据类型: {tensor.dtype}")  # 输出： torch.float32
         # 尝试一下循环open所有的图片，看看所有的图片是不是都能打开，应该可以。。。vit都行
         # except Image.DecompressionBombWarning:
         #     print(f"图片过大 {self.img_id[index]}")
@@ -207,9 +207,9 @@ def read_file(data_path, filename):
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')
-    df_val = read_file(opt['data_path'], 'multimodal_validate')
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:300]
+    df_train = read_file(opt['data_path'], 'multimodal_train')[:300]
+    df_val = read_file(opt['data_path'], 'multimodal_validate')[:300]
+    df_test = read_file(opt['data_path'], 'multimodal_test_public')[:300]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -282,20 +282,18 @@ def build_dataloader(opt, processor=None):
         val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
         test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/clip_large
-        train_set = CustomDataset_Clip(df_train, processor, opt['data_path'])
-        val_set = CustomDataset_Clip(df_val, processor, opt['data_path'])
-        test_set = CustomDataset_Clip(df_test, processor, opt['data_path'])
+        # train_set = CustomDataset_Clip(df_train, processor, opt['data_path'])
+        # val_set = CustomDataset_Clip(df_val, processor, opt['data_path'])
+        # test_set = CustomDataset_Clip(df_test, processor, opt['data_path'])
+        train_set, val_set, test_set = prepare_dataset_clip(opt, processor)
     # elif opt["model"] == "vit" or opt["model"] == "vit_large":
     #     train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
     #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
     #     test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
-    elif opt["model"] == "bert_vit": # 再试一下，实在不行，把这个换成prepare dataset那样！！！！！！！！！！！
+    elif opt["model"] == "bert_vit":
         tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
-    #
-    #     train_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
-    #     val_set = CustomDataset_Bert_Vit(df_val, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
-    #     test_set = CustomDataset_Bert_Vit(df_test, tokenizer, opt['max_len'], vit_processor, opt['data_path'])
+
         train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
@@ -311,15 +309,6 @@ def build_dataloader(opt, processor=None):
     val_loader = DataLoader(val_set, **val_params)
     test_loader = DataLoader(test_set, **test_params)
     return train_loader, val_loader, test_loader
-# def collate_fn(self, batch): bert_vit试一下自己构建batch！！！！！！！
-#     # print(torch.stack([x['pixel_values'] for x in batch]).shape) # 看一下是不是构建batch有问题，导致和attention head对不上，12*16
-#
-#     return {
-#         # 'pixel_values': torch.squeeze(torch.stack([x['pixel_values'] for x in batch]), dim=1),
-#         'pixel_values': torch.stack([x['pixel_values'] for x in batch]),
-#         'labels': torch.tensor([x['labels'] for x in batch])
-#     }
-
 
 def prepare_dataset(opt, processor):
     df_train, df_val, df_test = load_dataset(opt)
@@ -370,6 +359,38 @@ def prepare_dataset_bert_vit(opt, bert_processor, vit_processor):
     # 使用 functools.partial 固定住其他参数，只保留 example_batch
     from functools import partial
     transform_fn = partial(transform_bert_vit, bert_processor=bert_processor, vit_processor=vit_processor, opt=opt)
+
+    train_set = D.from_pandas(df_train)
+    val_set = D.from_pandas(df_val)
+    test_set = D.from_pandas(df_test)
+
+    train_set = train_set.with_transform(transform_fn)
+    val_set = val_set.with_transform(transform_fn)
+    test_set = test_set.with_transform(transform_fn)
+
+    return train_set, val_set, test_set
+
+def transform_clip(example_batch, processor, opt):
+    texts = [" ".join(str(x.split())) for x in example_batch["clean_title"]]
+
+    images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
+              example_batch['id']]
+    inputs = processor(text=texts, images=images, return_tensors="pt", padding="max_length",
+                                     truncation=True)
+
+    inputs["label"]=example_batch['label']
+    return inputs
+    # return {
+    #     'ids': inputs['input_ids'].clone().detach(),
+    #     'mask': inputs['attention_mask'].clone().detach(),
+    #     'pixel_values': inputs["pixel_values"].clone().detach(),
+    #     "label": example_batch['label']
+    # }
+def prepare_dataset_clip(opt, processor):
+    df_train, df_val, df_test = load_dataset(opt)
+    # 使用 functools.partial 固定住其他参数，只保留 example_batch
+    from functools import partial
+    transform_fn = partial(transform_clip, processor=processor, opt=opt)
 
     train_set = D.from_pandas(df_train)
     val_set = D.from_pandas(df_val)
