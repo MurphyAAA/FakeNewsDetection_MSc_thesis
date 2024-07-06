@@ -207,9 +207,9 @@ def read_file(data_path, filename):
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')[:300]
-    df_val = read_file(opt['data_path'], 'multimodal_validate')[:300]
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')[:300]
+    df_train = read_file(opt['data_path'], 'multimodal_train')#[:300]
+    df_val = read_file(opt['data_path'], 'multimodal_validate')#[:300]
+    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:300]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
