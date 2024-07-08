@@ -207,9 +207,9 @@ def read_file(data_path, filename):
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')#[:300]
-    df_val = read_file(opt['data_path'], 'multimodal_validate')#[:300]
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:300]
+    df_train = read_file(opt['data_path'], 'multimodal_train')[:300]
+    df_val = read_file(opt['data_path'], 'multimodal_validate')[:300]
+    df_test = read_file(opt['data_path'], 'multimodal_test_public')[:300]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -297,7 +297,7 @@ def build_dataloader(opt, processor=None):
         train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': False}
+                    'shuffle': True}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
@@ -333,7 +333,7 @@ def prepare_dataset(opt, processor):
     return train_set, val_set, test_set
 
 def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
-    texts = [" ".join(str(x.split())) for x in example_batch["clean_title"]]
+    texts = [" ".join(x.split()) for x in example_batch["clean_title"]]
     inputs=bert_processor(texts, None,
         add_special_tokens=True,
         max_length=opt["max_len"],
@@ -371,7 +371,7 @@ def prepare_dataset_bert_vit(opt, bert_processor, vit_processor):
     return train_set, val_set, test_set
 
 def transform_clip(example_batch, processor, opt):
-    texts = [" ".join(str(x.split())) for x in example_batch["clean_title"]]
+    texts = [" ".join(x.split()) for x in example_batch["clean_title"]]
 
     images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
               example_batch['id']]
