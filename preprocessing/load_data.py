@@ -378,6 +378,8 @@ def transform_clip(example_batch, processor, opt):
 
     images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
               example_batch['id']]
+    image_type=[isinstance(img, PIL.Image.Image) for img in images]
+    print(example_batch['id'], image_type)
     inputs = processor(text=texts, images=images, return_tensors="pt", padding="max_length",
                                      truncation=True)
 

@@ -39,7 +39,7 @@ def main(opt):
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader = build_dataloader(opt, processor=experiment.processor)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
+        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_2_{opt["label_type"]}.pth'
         if os.path.exists(fileName):
             print("loading model")
             start_epoch = experiment.load_clip_checkpoint(fileName)
