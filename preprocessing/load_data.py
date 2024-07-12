@@ -347,9 +347,11 @@ def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
     # Take a list of PIL images and turn them to pixel values
     images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
               example_batch['id']]
-    convert_tensor = transforms.ToTensor()
-    image_shape = [convert_tensor(x).shape for x in images]
-    print(image_shape)
+    # convert_tensor = transforms.ToTensor()
+    # image_shape = [convert_tensor(x).shape for x in images]
+    # print(image_shape)
+    image_type = [isinstance(img, PIL.Image.Image) for img in images]
+    print(example_batch['id'], image_type)
     inputs = vit_processor(images, return_tensors='pt')
     # Don't forget to include the labels!
     inputs['labels'] = example_batch['label']
