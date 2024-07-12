@@ -28,6 +28,23 @@ class Bert_VitExperiment:
         self.val_loader = val_loader
         self.test_loader = test_loader
 
+
+    def save_checkpoint(self, path, epoch):
+        checkpoint = {
+            'end_epoch': epoch,
+            'model': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+        }
+        torch.save(checkpoint, path)
+        print(f"Checkpoint saved at epoch {epoch}")
+    def load_checkpoint(self, path):
+        checkpoint = torch.load(path)
+        epoch = checkpoint['end_epoch']+1
+        self.model.load_state_dict(checkpoint['model'])
+        self.model.to(self.device)
+        self.optimizer.load_state_dict(checkpoint['optimizer'])
+        print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
+        return epoch
     def train(self, epoch):
         tot_loss = 0
         print_loss = 0
