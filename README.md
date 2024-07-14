@@ -102,22 +102,40 @@
     <td>?</td>
 </tr>
 <tr>
-    <td> multi-modal</td>
+    <td rowspan="2"> multi-modal</td>
     <td>clip</td>
+    <td>81.05%</td>
+    <td>79.78%</td>
+    <td>79.30%</td>
+    <td>80.54%</td>
+    <td>12.44%</td>
+    <td>79.36%</td>
+    <td>52.93%</td>
+    <td>53.44%</td>
+    <td>52.47%</td>
+    <td>15.22%</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
     <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
-    <td>?</td>
+</tr>
+<tr>
+    <td>bert-vit</td>
+    <td>83.08%</td>
+    <td>82.26%</td>
+    <td>82.25%</td>
+    <td>82.27%</td>
+    <td>13.80%</td>
+    <td>90.63%</td>
+    <td>90.53%</td>
+    <td>91.37%</td>
+    <td>89.74%</td>
+    <td>8.13%</td>
+    <td>89.05%</td>
+    <td>83.09%</td>
+    <td>80.83%</td>
+    <td>86.35%</td>
+    <td>7.06%</td>
 </tr>
 </table>
