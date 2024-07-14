@@ -267,6 +267,9 @@ def build_dataloader(opt, processor=None):
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
     print(f'testing set:{df_test.shape}')
+    train_class_count = torch.tensor(df_train)
+    tot_samples = df_train['label'].shape[0]
+    train_class_weights = tot_samples/(int(opt["label_type"][0])*train_class_count)
     # maxlen=0
     # totlen=0
     # for text in df_train["clean_title"]: #看一下text的最大长度
@@ -308,7 +311,7 @@ def build_dataloader(opt, processor=None):
     train_loader = DataLoader(train_set, **train_params)
     val_loader = DataLoader(val_set, **val_params)
     test_loader = DataLoader(test_set, **test_params)
-    return train_loader, val_loader, test_loader
+    return train_loader, val_loader, test_loader, train_class_weights
 
 def prepare_dataset(opt, processor):
     df_train, df_val, df_test = load_dataset(opt)

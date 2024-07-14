@@ -42,7 +42,6 @@ class ClipExperiment:
         self.val_loader = None
         self.test_loader = None
 
-        self.mse_loss = torch.nn.MSELoss()
         self.ent_loss = torch.nn.CrossEntropyLoss()
         # self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
         #                                   weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
@@ -50,7 +49,8 @@ class ClipExperiment:
                                            weight_decay=0.2)
         # self.scaler = GradScaler()
         # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
-
+    def set_weighted_loss(self, class_weight):
+        self.ent_loss = torch.nn.CrossEntropyLoss(weight=class_weight)
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -126,7 +126,7 @@ class ClipExperiment:
 
             # # 梯度裁剪 防止梯度过大loss变成nan
             # self.scaler.unscale_(self.optimizer)  # 在裁剪之前，确保梯度是未缩放的
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            # torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
             # self.scaler.step(self.optimizer)  # 来更新模型参数。
             # self.scaler.update()  # 来更新模型参数。

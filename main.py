@@ -22,7 +22,7 @@ import numpy as np
 def main(opt):
     if opt["model"] == "bert":
         experiment = BertExperiment(opt)
-        train_loader, val_loader, test_loader = build_dataloader(opt)
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         for epoch in range(opt["num_epochs"]):
             epoch_time = experiment.train(epoch)
@@ -37,7 +37,8 @@ def main(opt):
 
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/ clip_large
         experiment = ClipExperiment(opt)
-        train_loader, val_loader, test_loader = build_dataloader(opt, processor=experiment.processor)
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=experiment.processor)
+        experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_2_{opt["label_type"]}.pth'
         if os.path.exists(fileName):
@@ -95,7 +96,7 @@ def main(opt):
         trainer.save_metrics("eval", metrics)
     elif opt["model"] == "bert_vit":
         experiment = Bert_VitExperiment(opt)
-        train_loader, val_loader, test_loader = build_dataloader(opt)
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
         fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
