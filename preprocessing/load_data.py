@@ -267,7 +267,7 @@ def build_dataloader(opt, processor=None):
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
     print(f'testing set:{df_test.shape}')
-    train_class_count = torch.tensor(df_train)
+    train_class_count = torch.bincount(torch.tensor(df_train['label']))
     tot_samples = df_train['label'].shape[0]
     train_class_weights = tot_samples/(int(opt["label_type"][0])*train_class_count)
     # maxlen=0
