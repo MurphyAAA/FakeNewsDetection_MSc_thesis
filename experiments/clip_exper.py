@@ -50,7 +50,7 @@ class ClipExperiment:
         # self.scaler = GradScaler()
         # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
     def set_weighted_loss(self, class_weight):
-        class_weight.to(self.device)
+        class_weight = class_weight.to(self.device, dtype=torch.float)
         self.ent_loss = torch.nn.CrossEntropyLoss(weight=class_weight)
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
