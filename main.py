@@ -7,6 +7,7 @@ from experiments.text.bert_exper import BertExperiment
 from experiments.clip_exper import ClipExperiment
 from experiments.visual.vit_exper import VitExperiment
 from experiments.multimodal.bert_vit_exper import Bert_VitExperiment
+from experiments.multimodal.albef_exper import AlbefExperiment
 from sklearn import metrics
 import sys
 from transformers import Trainer, TrainingArguments
@@ -118,7 +119,30 @@ def main(opt):
             evaluation(labels, predicts, True)
         else:  # 3/6_way
             evaluation(labels, predicts, False)
+    elif opt["model"] == "albef":
+        experiment = AlbefExperiment(opt)
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, (experiment.text_processor, experiment.img_processor))
+        experiment.set_dataloader(train_loader, val_loader, test_loader)
 
+        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
+        if os.path.exists(fileName):
+            print("loading model")
+            start_epoch = experiment.load_checkpoint(fileName)
+        else:
+            start_epoch = 0
+        # train
+        print("training")
+        for epoch in range(start_epoch, opt['num_epochs']):
+            epoch_time = experiment.train(epoch)
+            experiment.save_checkpoint(
+                f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        print("validation")
+        predicts, labels = experiment.validation()
+        if opt["label_type"] == "2_way":
+            evaluation(labels, predicts, True)
+        else:  # 3/6_way
+            evaluation(labels, predicts, False)
 def compute_metrics(eval_pred):
     labels = eval_pred.label_ids
     preds = eval_pred.predictions.argmax(-1)

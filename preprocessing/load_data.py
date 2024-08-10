@@ -40,7 +40,6 @@ upvote_ratio
 对于subreddit为 photoshopbattles 的label全是True
 """
 
-exceptionImages = []
 
 
 class CustomDataset(Dataset):  # for Bert training
@@ -199,6 +198,52 @@ class CustomDataset_Bert_Vit(Dataset):
             "token_type_ids": torch.tensor(token_type_ids, dtype=torch.long),
             "labels": self.label[index]
         }
+
+
+class CustomDataset_Albef(Dataset):
+    def __init__(self, dataframe,txt_processor, img_processor, data_path):
+        self.data = dataframe
+        # processor不能从外面传进来，cant pickle!!!!
+        # self.transform = transform
+
+        # self.txt_processor = load_processor("blip_caption")
+        # self.img_processor = load_processor("blip_image_eval")
+        self.txt_processor = txt_processor
+        self.img_processor = img_processor
+        # pdb.set_trace()
+        # print(self.txt_processor)
+        # print(self.img_processor)
+        self.text = dataframe["clean_title"]
+        self.label = dataframe["label"]
+        self.img_id = dataframe["id"]
+        self.data_path = data_path
+    def __len__(self):
+        return len(self.text)
+
+    def __getitem__(self, index):
+        # pdb.set_trace()
+        text = str(self.text[index])
+        text = " ".join(text.split())
+        text_input = text#self.text_processor["train"](text)
+        text_input = self.txt_processor(text_input)
+        # pdb.set_trace()
+        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+        img = Image.open(img_path).convert("RGB")
+        try:
+            # image = self.transform(img)#self.img_processor["train"](img)#.unsqueeze(0)
+            image = self.img_processor(img)
+        except ValueError as e:
+            print(f"Error processing image {img_path}: {e}")
+            raise
+        # print(image.shape)
+        # print(text_input)
+        # pdb.set_trace()
+        return {
+            "image": image,
+            "text_input": text_input,
+            "labels": torch.tensor(self.label[index], dtype=torch.long)
+
+        }
 def read_file(data_path, filename):
     df = pd.read_csv(f'{data_path}/{filename}.tsv', delimiter='\t')
 
@@ -298,6 +343,15 @@ def build_dataloader(opt, processor=None):
         vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
 
         train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
+
+    elif opt["model"] == "albef":
+        text_processor, img_processor = processor
+        # text_processor["eval"] 不能传text_processor，因为是个字典，不能pickle
+        train_set = CustomDataset_Albef(df_train, text_processor["eval"], img_processor["eval"], opt['data_path'])
+        val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"], opt['data_path'])
+        test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"], opt['data_path'])
+        # train_set, val_set, test_set = prepare_dataset_albef(opt)
+
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
                     'shuffle': True}
@@ -358,6 +412,7 @@ def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
     inputs = vit_processor(images, return_tensors='pt')
     # Don't forget to include the labels!
     inputs['labels'] = example_batch['label']
+    pdb.set_trace()
     inputs['ids'] = torch.tensor(ids, dtype=torch.long)
     inputs['mask'] = torch.tensor(mask, dtype=torch.long)
     inputs["token_type_ids"] = torch.tensor(token_type_ids, dtype=torch.long)
