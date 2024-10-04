@@ -17,12 +17,14 @@ import pdb
 import torch
 # from models.bert_vit_model import Bert_VitClass
 import time
+from torch.utils.tensorboard import SummaryWriter
 from models.albef_model import AlbefClass
 from lavis.models import load_model_and_preprocess
 class AlbefExperiment:
     def __init__(self, opt):
 
         self.opt = opt
+        self.writer = SummaryWriter(opt['log_dir']+opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = AlbefClass(opt)
         self.model.to(self.device)
@@ -77,6 +79,7 @@ class AlbefExperiment:
             logits = self.model(sample)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
+            self.writer.add_scalar(f"loss{epoch}", loss.item(), idx)
             tot_loss += loss.item()
             print_loss += loss.item()
             self.optimizer.zero_grad()

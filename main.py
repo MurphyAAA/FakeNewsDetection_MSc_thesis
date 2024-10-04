@@ -137,6 +137,7 @@ def main(opt):
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        experiment.writer.close()
         print("validation")
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":

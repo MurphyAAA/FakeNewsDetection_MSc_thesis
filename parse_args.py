@@ -23,12 +23,13 @@ def parse_arguments():
     parse.add_argument('--output_path', type=str, default='result',
                         help='Where to create the output directory containing logs and weights.')
     parse.add_argument('--data_path', type=str, default='data/Fakeddit', help='Locate the Fakeddit dataset on disk.')
+    parse.add_argument('--log_dir', type=str, default='logs/', help='log directory.')
     # parse.add_argument('--data_path', type=str, default='./FakeNewsDetection_MSc_thesis/data/Fakeddit',
     #                    help='Locate the Fakeddit dataset on disk.')
 
     parse.add_argument('--cpu', action='store_true', help='If set, the experiment will run on the CPU')
     parse.add_argument('--model', type=str, default="albef", choices=['bert', 'clip', 'clip_large', 'vit', 'vit_large', 'bert_vit', 'albef'])
-    parse.add_argument('--label_type', type=str, default="2_way", choices=['2_way', '3_way', '6_way'])
+    parse.add_argument('--label_type', type=str, default="6_way", choices=['2_way', '3_way', '6_way'])
 
     #Build options dict
     opt = vars(parse.parse_args())
