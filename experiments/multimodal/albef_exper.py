@@ -83,7 +83,7 @@ class AlbefExperiment:
             logits = self.model(sample)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
-            self.writer.add_scalar(f"loss{epoch}", loss.item(), idx)
+            self.writer.add_scalar(f"loss_{self.opt['label_type']}_{epoch}", loss.item(), idx)
             tot_loss += loss.item()
             print_loss += loss.item()
             self.optimizer.zero_grad()
