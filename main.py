@@ -134,8 +134,8 @@ def main(opt):
         print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
-            experiment.save_checkpoint(
-                f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+            # experiment.save_checkpoint(
+            #     f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         experiment.writer.close()
         print("validation")
@@ -195,12 +195,12 @@ def evaluation(labels, predicts, two_way):
 
     else:  # 3/6_way
         acc = metrics.accuracy_score(labels, predicts)
-        precision = metrics.precision_score(labels, predicts, average=None)  # 3/6_way
-        precision_macro = metrics.precision_score(labels, predicts, average="macro")
-        recall = metrics.recall_score(labels, predicts, average=None)  # 3/6_way
-        recall_macro = metrics.recall_score(labels, predicts, average="macro")
-        f1 = metrics.f1_score(labels, predicts, average=None)  # 3/6_way
-        f1_macro = metrics.f1_score(labels, predicts, average="macro")
+        precision = metrics.precision_score(labels, predicts, average=None, labels=np.unique(predicts))  # 3/6_way
+        precision_macro = metrics.precision_score(labels, predicts, average="macro", labels=np.unique(predicts)) # , labels=np.unique(predicts) 只统计最少被预测过1次的
+        recall = metrics.recall_score(labels, predicts, average=None, labels=np.unique(predicts))  # 3/6_way
+        recall_macro = metrics.recall_score(labels, predicts, average="macro", labels=np.unique(predicts))
+        f1 = metrics.f1_score(labels, predicts, average=None, labels=np.unique(predicts))  # 3/6_way
+        f1_macro = metrics.f1_score(labels, predicts, average="macro", labels=np.unique(predicts))
         conf_matrix = metrics.confusion_matrix(labels, predicts)
         FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
 

@@ -65,6 +65,10 @@ class AlbefExperiment:
         print_loss = 0
         epoch_time =0
         self.model.train()
+        # for name, param in self.model.named_parameters():
+        #     if param.requires_grad:
+        #         print(f"Parameter name: {name}, Shape: {param.shape}")
+        # pdb.set_trace()
         start_time = time.time()
         epoch_start = time.time()
         for idx, databatch in enumerate(self.train_loader):

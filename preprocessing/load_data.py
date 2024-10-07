@@ -203,16 +203,10 @@ class CustomDataset_Bert_Vit(Dataset):
 class CustomDataset_Albef(Dataset):
     def __init__(self, dataframe,txt_processor, img_processor, data_path):
         self.data = dataframe
-        # processor不能从外面传进来，cant pickle!!!!
         # self.transform = transform
 
-        # self.txt_processor = load_processor("blip_caption")
-        # self.img_processor = load_processor("blip_image_eval")
         self.txt_processor = txt_processor
         self.img_processor = img_processor
-        # pdb.set_trace()
-        # print(self.txt_processor)
-        # print(self.img_processor)
         self.text = dataframe["clean_title"]
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
@@ -252,9 +246,9 @@ def read_file(data_path, filename):
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')#[:300]
-    df_val = read_file(opt['data_path'], 'multimodal_validate')#[:300]
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:300]
+    df_train = read_file(opt['data_path'], 'multimodal_train')[:800]
+    df_val = read_file(opt['data_path'], 'multimodal_validate')[:300]
+    df_test = read_file(opt['data_path'], 'multimodal_test_public')[:800]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -351,7 +345,6 @@ def build_dataloader(opt, processor=None):
         val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"], opt['data_path'])
         test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"], opt['data_path'])
         # train_set, val_set, test_set = prepare_dataset_albef(opt)
-
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
                     'shuffle': True}
