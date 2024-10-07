@@ -134,8 +134,8 @@ def main(opt):
         print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
-            # experiment.save_checkpoint(
-            #     f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+            experiment.save_checkpoint(
+                f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         experiment.writer.close()
         print("validation")
