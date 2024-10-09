@@ -246,9 +246,9 @@ def read_file(data_path, filename):
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')[:800]
-    df_val = read_file(opt['data_path'], 'multimodal_validate')[:300]
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')[:800]
+    df_train = read_file(opt['data_path'], 'multimodal_train')#[:800]
+    df_val = read_file(opt['data_path'], 'multimodal_validate')#[:300]
+    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:800]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -401,11 +401,11 @@ def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
     # image_shape = [convert_tensor(x).shape for x in images]
     # print(image_shape)
     image_type = [isinstance(img, PIL.Image.Image) for img in images]
-    print(example_batch['id'], image_type)
+    # print(example_batch['id'], image_type)
     inputs = vit_processor(images, return_tensors='pt')
     # Don't forget to include the labels!
     inputs['labels'] = example_batch['label']
-    pdb.set_trace()
+    # pdb.set_trace()
     inputs['ids'] = torch.tensor(ids, dtype=torch.long)
     inputs['mask'] = torch.tensor(mask, dtype=torch.long)
     inputs["token_type_ids"] = torch.tensor(token_type_ids, dtype=torch.long)
