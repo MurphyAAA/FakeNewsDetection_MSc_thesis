@@ -78,57 +78,6 @@ class CustomDataset(Dataset):  # for Bert training
         }
 
 
-class CustomDataset_Clip(Dataset):
-    def __init__(self, dataframe, clip_processor, data_path):
-        self.clip_processor = clip_processor
-        # self.tokenizer = clip.tokenize
-        self.data = dataframe
-        self.text = dataframe["clean_title"]
-        self.label = dataframe["label"]
-        self.img_id = dataframe["id"]
-        self.data_path = data_path
-
-    def __len__(self):
-        return len(self.text)
-
-    def __getitem__(self, index):
-        text = str(self.text[index])
-        text = " ".join(text.split())
-        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
-
-        # try:
-        img = Image.open(img_path).convert("RGB")
-        # print(f"index:{index}, image id:{self.img_id[index]}, image:\n{img}") #看看有问题的image有啥不同！！！！
-        # convert_tensor = transforms.ToTensor()
-        # tensor = convert_tensor(img)
-# 打印张量信息
-#         print(f"张量形状: {tensor.shape}")  # 输出： torch.Size([3, 高度, 宽度])
-#         print(f"张量数据类型: {tensor.dtype}")  # 输出： torch.float32
-        # 尝试一下循环open所有的图片，看看所有的图片是不是都能打开，应该可以。。。vit都行
-        # except Image.DecompressionBombWarning:
-        #     print(f"图片过大 {self.img_id[index]}")
-        # 检查图像的通道数
-        # print()
-        # if img.mode != "RGB":
-        #     raise ValueError(f"图像 {self.img_id[index]} 不是 RGB 模式。实际模式: {img.mode}")
-        # print(f"1 {self.img_id[index]}")
-        # text only 的解决一下unbalance的问题！！！！
-        inputs = self.clip_processor(text=[text], images=img, return_tensors="pt", padding="max_length",
-                                     truncation=True)  # (text=text, images=img, return_tensors="pt", padding="max_length", truncation=True)
-        # print(f"2 {self.img_id[index]}")
-        ids = torch.squeeze(inputs['input_ids'], dim=0)  # batch_size,77   如果不squeeze去掉最前面的1， 后面拼成batch时会多一个维度
-        mask = torch.squeeze(inputs['attention_mask'], dim=0)  # batch_size,77
-        pixel_values = torch.squeeze(inputs["pixel_values"], dim=0)  # batch_size,3,224,224
-
-        # print(f"{self.img_id[index]} pixel_value:{pixel_values.shape}")
-        return {
-            'ids': ids.clone().detach(),
-            'mask': mask.clone().detach(),
-            'pixel_values': pixel_values.clone().detach(),
-            # 'label': torch.tensor(self.label[index], dtype=torch.long)
-            "label": self.label[index]
-        }
-
 class CustomDataset_Vit(Dataset):
     def __init__(self, dataframe, feature_extractor, data_path):
         self.feature_extractor = feature_extractor
@@ -276,27 +225,6 @@ def load_dataset(opt):
         df_test = df_test.rename(columns={"6_way_label": "label"})
 
     df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val, df_test)
-    # new_df = df[["subreddit","2_way_label"]]
-    # filter_df = new_df[(df["subreddit"]=="photoshopbattles")&(df["2_way_label"]==1)]
-    # new_df = filter_df[["subreddit","2_way_label"]]
-    # print(filter_df.count())
-    # if filter_img_flg == True:
-    #     def check_file(filename, dataframe):  # 检查 train,val,test数据集中的图片是否能正常打开，不能打开则将图片名写入文件filename
-    #         if not os.path.isfile(f'{opt["data_path"]}/{filename}'):
-    #             with open(filename, "w") as file:
-    #                 for index in dataframe["id"]:
-    #                     img_path = f'{opt["data_path"]}/public_image_set/{index}.jpg'
-    #                     try:
-    #                         Image.open(img_path)
-    #                     except PIL.UnidentifiedImageError:
-    #                         file.write(f'{index} ')
-    #                         continue
-    #         else:
-    #             print(f"file {filename} exists")
-    #
-    #     check_file("filter_image_train.txt", df_train)
-    #     check_file("filter_image_val.txt", df_val)
-    #     check_file("filter_image_test.txt", df_test)
     return df_train_filter, df_val_filter, df_test_filter
 
 
@@ -309,6 +237,9 @@ def build_dataloader(opt, processor=None):
     train_class_count = torch.bincount(torch.tensor(df_train['label']))
     tot_samples = df_train['label'].shape[0]
     train_class_weights = tot_samples/(int(opt["label_type"][0])*train_class_count)
+    print("train", train_class_count)
+    print("val  ", torch.bincount(torch.tensor(df_val['label'])))
+
     # maxlen=0
     # totlen=0
     # for text in df_train["clean_title"]: #看一下text的最大长度
@@ -318,24 +249,17 @@ def build_dataloader(opt, processor=None):
     # print(f'max text len:{maxlen}, avg text len:{totlen/df_train.shape[0]}')
     # train max len: 553 words, avg len: 7.5 words # 有个问题，text长度不均匀，都padding了浪费资源，怎么能长度不一致也能训练？ ????????
     if opt["model"] == "bert":
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-
-        train_set = CustomDataset(df_train, tokenizer, opt['max_len'])
-        val_set = CustomDataset(df_val, tokenizer, opt['max_len'])
-        test_set = CustomDataset(df_test, tokenizer, opt['max_len'])
+        train_set = CustomDataset(df_train, processor, opt['max_len'])
+        val_set = CustomDataset(df_val, processor, opt['max_len'])
+        test_set = CustomDataset(df_test, processor, opt['max_len'])
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/clip_large
-        # train_set = CustomDataset_Clip(df_train, processor, opt['data_path'])
-        # val_set = CustomDataset_Clip(df_val, processor, opt['data_path'])
-        # test_set = CustomDataset_Clip(df_test, processor, opt['data_path'])
         train_set, val_set, test_set = prepare_dataset_clip(opt, processor)
     # elif opt["model"] == "vit" or opt["model"] == "vit_large":
     #     train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
     #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
     #     test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     elif opt["model"] == "bert_vit":
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
-
+        tokenizer, vit_processor = processor
         train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
 
     elif opt["model"] == "albef":

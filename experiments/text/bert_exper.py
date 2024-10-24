@@ -15,6 +15,7 @@ class BertExperiment:
         self.opt = opt
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = BertClass(opt)
+        self.tokenizer = self.model.tokenizer
         # model() 调用__call__()
         self.model.to(self.device)
 
@@ -24,7 +25,6 @@ class BertExperiment:
 
         # define loss function and optimizer
         self.loss_fun = torch.nn.CrossEntropyLoss()
-        self.loss_fun2 = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
 
     def set_dataloader(self, train_loader, val_loader, test_loader):

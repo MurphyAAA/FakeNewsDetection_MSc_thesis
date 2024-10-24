@@ -23,7 +23,8 @@ import numpy as np
 def main(opt):
     if opt["model"] == "bert":
         experiment = BertExperiment(opt)
-        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt)
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=experiment.tokenizer)
+        # experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
         for epoch in range(opt["num_epochs"]):
             epoch_time = experiment.train(epoch)
@@ -54,6 +55,7 @@ def main(opt):
             experiment.save_clip_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        experiment.writer.close()
         print("validation")
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
@@ -97,7 +99,9 @@ def main(opt):
         trainer.save_metrics("eval", metrics)
     elif opt["model"] == "bert_vit":
         experiment = Bert_VitExperiment(opt)
-        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt)
+        processor = (experiment.tokenizer, experiment.vit_processor)
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=processor)
+        experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
         fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
@@ -113,6 +117,7 @@ def main(opt):
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        experiment.writer.close()
         print("validation")
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
@@ -122,6 +127,7 @@ def main(opt):
     elif opt["model"] == "albef":
         experiment = AlbefExperiment(opt)
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, (experiment.text_processor, experiment.img_processor))
+        experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
         fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
@@ -161,17 +167,17 @@ def compute_metrics(eval_pred):
     conf_matrix = metrics.confusion_matrix(labels, preds)
     # 2-way
     if opt["label_type"] == '2_way':
-        FRR = conf_matrix[0,1]/(conf_matrix[0,1]+conf_matrix[0,0])# False Real Rate:  That is, how much false news is mistakenly believed to be true news =错误当成真消息数/假消息总数
+        FPR = conf_matrix[0,1]/(conf_matrix[0,1]+conf_matrix[0,0])# False Positive Rate:  That is, how much false news is mistakenly believed to be true news =错误当成真消息数/假消息总数
     else:
     # 3-way/6-way
-        FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
+        FPR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
     # FRR = (conf_matrix[1,0]+conf_matrix[2,0]) / (conf_matrix[1,0]+conf_matrix[1,1]+conf_matrix[1,2]+
     #                                              conf_matrix[2,0]+conf_matrix[2,1]+conf_matrix[2,2])
     return {"accuracy": accuracy,
             "f1_marco": f1_macro,
             "recall_macro": recall_macro,
             "precision_macro": precision_macro,
-            "False Real Rate:": FRR
+            "False Positive Rate:": FPR
             }
 
 
@@ -190,9 +196,14 @@ def evaluation(labels, predicts, two_way):
         # FN = conf_matrix[1, 0]
         # TP = conf_matrix[1, 1]
         # FPR = FP / (FP + TN)
-
-        FRR = conf_matrix[0, 1] / (conf_matrix[0, 1] + conf_matrix[0, 0])
-
+        # TPR = TP/TP+FN
+        #     预 测
+        # 真
+        # 实
+        # FPR = conf_matrix[0, 1] / (conf_matrix[0, 1] + conf_matrix[0, 0])
+        # TPR = conf_matrix[1, 1] / (conf_matrix[1, 1] + conf_matrix[1, 0])
+        FPR, TPR, thresholds = metrics.roc_curve(labels, predicts)
+        roc_auc = metrics.auc(FPR, TPR)
     else:  # 3/6_way
         acc = metrics.accuracy_score(labels, predicts)
         precision = metrics.precision_score(labels, predicts, average=None, labels=np.unique(predicts))  # 3/6_way
@@ -202,15 +213,20 @@ def evaluation(labels, predicts, two_way):
         f1 = metrics.f1_score(labels, predicts, average=None, labels=np.unique(predicts))  # 3/6_way
         f1_macro = metrics.f1_score(labels, predicts, average="macro", labels=np.unique(predicts))
         conf_matrix = metrics.confusion_matrix(labels, predicts)
-        FRR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
+        FPR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
 
     print("—————————— RESULT ——————————")
     print(f'**acc** :       【{acc * 100:.2f}%】')
     print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
-    print(f'**recall** :    【{recall}】------- **precision-Macro** : 【{recall_macro}】')
-    print(f'**f1** :        【{f1}】------- **precision-Macro** : 【{f1_macro}】')
+    print(f'**recall** :    【{recall}】------- **recall-Macro** : 【{recall_macro}】')
+    print(f'**f1** :        【{f1}】------- **f1-Macro** : 【{f1_macro}】')
     print(f'**conf_matrix**:\n【{conf_matrix}】')
-    print(f'**FPR** :       【{FRR}】')
+    print(f'**FPR** :       【{FPR}】')
+    if two_way:
+        print(f'**FPR** :       【{FPR}】')
+        print(f'**TPR** :       【{TPR}】')
+        print(f'**ROC_auc** :   【{roc_auc}】')
+
 
 
 # def print_to_file(*args, **kwargs):

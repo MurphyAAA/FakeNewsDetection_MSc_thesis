@@ -6,14 +6,19 @@
 @IDE ：PyCharm
 """
 import torch
+from torch.utils.tensorboard import SummaryWriter
+
 from models.bert_vit_model import Bert_VitClass
 import time
 
 class Bert_VitExperiment:
     def __init__(self, opt):
         self.opt = opt
+        self.writer = SummaryWriter(opt['log_dir']+opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = Bert_VitClass(opt)
+        self.tokenizer = self.model.tokenizer
+        self.vit_processor = self.model.vit_processor
         self.model.to(self.device)
 
         self.train_loader = None
@@ -22,7 +27,15 @@ class Bert_VitExperiment:
 
         self.ent_loss = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
+        # self.optimizer = torch.optim.AdamW([
+        #     {'params': self.model.bertmodel.parameters(), 'lr': 5e-5},  # 对BERT部分使用较小的学习率
+        #     {'params': self.model.vitmodel.parameters(), 'lr': 5e-4},  # 对ViT部分使用稍大的学习率
+        #     {'params': self.model.fc.parameters(), 'lr': 5e-3},  # 对全连接层使用更大的学习率
+        # ])
 
+    def set_weighted_loss(self, class_weight):
+        class_weight = class_weight.to(self.device, dtype=torch.float)
+        self.ent_loss = torch.nn.CrossEntropyLoss(weight=class_weight)
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -63,6 +76,7 @@ class Bert_VitExperiment:
 
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
+            self.writer.add_scalar(f"loss_{self.opt['label_type']}_{epoch}", loss.item(), idx)
             tot_loss += loss.item()
             print_loss += loss.item()
             self.optimizer.zero_grad()
@@ -70,10 +84,10 @@ class Bert_VitExperiment:
             self.optimizer.step()
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
-                loader_time = (end_time - start_time)
+                batch_time = (end_time - start_time)
                 start_time = time.time()
                 print(
-                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{loader_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
+                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{batch_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 print_loss = 0
         epoch_end = time.time()
         epoch_time = epoch_end- epoch_start
