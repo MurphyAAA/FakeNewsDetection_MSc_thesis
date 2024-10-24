@@ -59,6 +59,7 @@ class Bert_VitExperiment:
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
     def train(self, epoch):
+        print(f"Start training at epoch {epoch}")
         tot_loss = 0
         print_loss = 0
         epoch_time =0
@@ -94,6 +95,7 @@ class Bert_VitExperiment:
         return epoch_time
 
     def validation(self):
+        print("Validation Started")
         self.model.eval()
         fin_label = []
         fin_output = []

@@ -40,9 +40,9 @@ def main(opt):
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+        experiment.writer.close()
         # validation
         predicts, labels = experiment.validate()
-        # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
         if opt["label_type"] == "2_way":
             evaluation(labels, predicts, True)
         else:  # 3/6_way
@@ -175,6 +175,7 @@ def compute_metrics(eval_pred):
 
 
 def evaluation(labels, predicts, two_way):
+    # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
     if two_way:  # 2_way
         acc = metrics.accuracy_score(labels, predicts)
         precision = metrics.precision_score(labels, predicts)  # 2_way

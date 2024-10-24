@@ -18,8 +18,10 @@ class ClipClass(torch.nn.Module):
         # self.l1 = transformers.BertModel.from_pretrained('bert-base-uncased')
         if opt["model"] == "clip":
             self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+            self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
         else:  # clip_large
             self.model = CLIPModel.from_pretrained("openai/clip-vit-large-patch14")
+            self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
 
         # 冻结CLIP模型的参数
         # for param in self.model.parameters():
