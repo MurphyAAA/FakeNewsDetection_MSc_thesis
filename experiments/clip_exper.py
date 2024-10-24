@@ -7,6 +7,7 @@
 """
 import numpy
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from transformers import CLIPProcessor
 from models.clip_model import ClipClass
 import time
@@ -28,14 +29,10 @@ def check_gradients(model):
 class ClipExperiment:
     def __init__(self, opt):
         self.opt = opt
+        self.writer = SummaryWriter(opt['log_dir'] + opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
-        # self.model, self.preprocess = clip.load("ViT-B/32", device='cpu') # load it first to CPU to ensure you're using fp32 precision
-        # self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
         self.model = ClipClass(opt)
-        if opt["model"] == "clip":
-            self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        else: # clip_large
-            self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
+        self.processor = self.model.processor
         self.model.to(self.device)
 
         self.train_loader = None
@@ -45,13 +42,17 @@ class ClipExperiment:
         self.ent_loss = torch.nn.CrossEntropyLoss()
         # self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
         #                                   weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
+
+        # filter(lambda p: p.requires_grad, self.model.parameters()) 从 self.model.parameters()中选择出 p.requires_grad为True的值
         self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
                                            weight_decay=0.2)
         # self.scaler = GradScaler()
         # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
+
     def set_weighted_loss(self, class_weight):
         class_weight = class_weight.to(self.device, dtype=torch.float)
         self.ent_loss = torch.nn.CrossEntropyLoss(weight=class_weight)
+
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -62,7 +63,7 @@ class ClipExperiment:
     #         p.data = p.data.float()
     #         p.grad.data = p.grad.data.float()
 
-    def save_clip_checkpoint(self, path, epoch):
+    def save_checkpoint(self, path, epoch):
         checkpoint = {
             'end_epoch': epoch,
             # 'tot_loss': tot_loss,
@@ -74,7 +75,7 @@ class ClipExperiment:
         torch.save(checkpoint, path)
         print(f"Checkpoint saved at epoch {epoch}")
 
-    def load_clip_checkpoint(self, path):
+    def load_checkpoint(self, path):
         checkpoint = torch.load(path)
         epoch = checkpoint['end_epoch']+1
         # tot_loss = checkpoint['tot_loss']
@@ -92,7 +93,9 @@ class ClipExperiment:
     def freezeLayer(self, layerName, setState):
         for param in layerName.parameters():
             param.requires_grad = not setState
+
     def train(self, epoch):
+        print(f"Start training at epoch {epoch}")
         tot_loss = 0
         print_loss = 0
         epoch_time = 0
@@ -112,6 +115,7 @@ class ClipExperiment:
             output = self.model(ids, mask, pixel_values)
             self.optimizer.zero_grad()
             loss = self.ent_loss(output, label)
+            self.writer.add_scalar(f"loss_{self.opt['label_type']}", loss.item(), epoch*len(self.train_loader) + idx)
             tot_loss += loss.item()
             print_loss += loss.item()
 
@@ -147,6 +151,7 @@ class ClipExperiment:
         return epoch_time
 
     def validation(self):
+        print("Validation Started")
         self.model.eval()
         tot_loss = 0
         fin_label = []

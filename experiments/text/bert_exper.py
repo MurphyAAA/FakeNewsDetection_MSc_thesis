@@ -6,6 +6,8 @@
 @IDE ：PyCharm
 """
 import torch
+from torch.utils.tensorboard import SummaryWriter
+
 from models.bert_model import BertClass
 import time
 import pdb
@@ -13,6 +15,7 @@ import pdb
 class BertExperiment:
     def __init__(self, opt):
         self.opt = opt
+        self.writer = SummaryWriter(opt['log_dir'] + opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = BertClass(opt)
         self.tokenizer = self.model.tokenizer
@@ -51,6 +54,7 @@ class BertExperiment:
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
     def train(self, epoch):
+        print(f"Start training at epoch {epoch}")
         tot_loss = 0
         print_loss = 0
         epoch_time = 0
@@ -66,8 +70,8 @@ class BertExperiment:
             logits = self.model(ids, mask, token_type_ids) # embedding
 
             self.optimizer.zero_grad()
-            # pdb.set_trace()
             loss = self.loss_fun(logits, label)
+            self.writer.add_scalar(f"loss_{self.opt['label_type']}", loss.item(), epoch*len(self.train_loader) + idx)
             # for visualization
             tot_loss += loss.item()
             print_loss += loss.item()
@@ -94,6 +98,7 @@ class BertExperiment:
 
     # return predict result and real label
     def validate(self):
+        print("Validation Started")
         self.model.eval()
         fin_label = []
         fin_output = []
