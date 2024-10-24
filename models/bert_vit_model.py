@@ -8,7 +8,8 @@
 import pdb
 
 import torch
-from transformers import BertModel, ViTModel
+from transformers import BertModel, ViTModel, BertTokenizer, ViTImageProcessor
+
 
 class Bert_VitClass(torch.nn.Module):
     def __init__(self, opt):
@@ -16,7 +17,10 @@ class Bert_VitClass(torch.nn.Module):
         self.bertmodel = BertModel.from_pretrained('bert-base-uncased')  # embedding
         self.vitmodel = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k',
                                                                num_labels=int(opt['label_type'][0]))
-        self.dropout = torch.nn.Dropout(0.3)
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
+
+        # self.dropout = torch.nn.Dropout(0.3)
 
         if opt["label_type"] == "2_way":
             self.fc = torch.nn.Linear(768+768, 2)  # Bert base 的H是768
@@ -29,7 +33,7 @@ class Bert_VitClass(torch.nn.Module):
         _, text_embeds = self.bertmodel(ids, attention_mask=mask, token_type_ids=token_type_ids, return_dict=False)
         _, img_embeds = self.vitmodel(pixel_values=pixel_values, return_dict=False)
         combined_output = torch.cat((text_embeds, img_embeds), dim=1)
-        output = self.dropout(combined_output)
-        output = self.fc(output)
+        # output = self.dropout(combined_output)
+        output = self.fc(combined_output)
         return output
 

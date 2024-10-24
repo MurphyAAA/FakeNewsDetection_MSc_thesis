@@ -38,6 +38,9 @@ class AlbefExperiment:
         self.ent_loss = torch.nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
 
+    def set_weighted_loss(self, class_weight):
+        class_weight = class_weight.to(self.device, dtype=torch.float)
+        self.ent_loss = torch.nn.CrossEntropyLoss(weight=class_weight)
     def set_dataloader(self, train_loader, val_loader, test_loader):
         self.train_loader = train_loader
         self.val_loader = val_loader
