@@ -18,7 +18,15 @@ import numpy as np
 要求的意思是只用bert或clip提取特征么？而不是直接用那个模型？？
 输出一下每50个batch的时间，以及训练，验证总时间！
 """
-
+def load_model(experiment):
+    start_epoch = 0
+    for i in range(opt["num_epochs"], 0, -1):
+        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{i}_{opt["label_type"]}.pth'
+        if os.path.exists(fileName):
+            print("loading model")
+            start_epoch = experiment.load_checkpoint(fileName)
+            break
+    return start_epoch
 
 def main(opt):
     if opt["model"] == "bert":
@@ -26,19 +34,13 @@ def main(opt):
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=experiment.tokenizer)
         # experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_1_{opt["label_type"]}.pth'
-        if os.path.exists(fileName):
-            print("loading model")
-            start_epoch = experiment.load_checkpoint(fileName)
-        else:
-            start_epoch = 0
-        print("training")
+        start_epoch = load_model(experiment)
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
-
+        # validation
         predicts, labels = experiment.validate()
         # precision=TP/(TP+FP)  recall=TP/(TP+FN)  F1 score  FPR=FP/(FP+TN)
         if opt["label_type"] == "2_way":
@@ -51,21 +53,15 @@ def main(opt):
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=experiment.processor)
         experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
-        if os.path.exists(fileName):
-            print("loading model")
-            start_epoch = experiment.load_clip_checkpoint(fileName)
-        else:
-            start_epoch = 0
+        start_epoch = load_model(experiment)
         # train
-        print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
-            experiment.save_clip_checkpoint(
+            experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         experiment.writer.close()
-        print("validation")
+        # validation
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
             evaluation(labels, predicts, True)
@@ -113,21 +109,15 @@ def main(opt):
         experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
-        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
-        if os.path.exists(fileName):
-            print("loading model")
-            start_epoch = experiment.load_checkpoint(fileName)
-        else:
-            start_epoch = 0
+        start_epoch = load_model(experiment)
         # train
-        print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         experiment.writer.close()
-        print("validation")
+        # validation
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
             evaluation(labels, predicts, True)
@@ -139,21 +129,15 @@ def main(opt):
         experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 
-        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_0_{opt["label_type"]}.pth'
-        if os.path.exists(fileName):
-            print("loading model")
-            start_epoch = experiment.load_checkpoint(fileName)
-        else:
-            start_epoch = 0
+        start_epoch = load_model(experiment)
         # train
-        print("training")
         for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         experiment.writer.close()
-        print("validation")
+        # validation
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
             evaluation(labels, predicts, True)
