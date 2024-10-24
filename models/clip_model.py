@@ -49,7 +49,7 @@ class ClipClass(torch.nn.Module):
         # output_2_text = self.l2(text_embeds)
         # combined_output = torch.cat((output_2_text, output_2_img), dim=1)
         combined_output = torch.cat((text_embeds, img_embeds), dim=1)  # ********** 组合方式也可以调整
-        output_3 = self.l3(combined_output)
+        # output_3 = self.l3(combined_output)
         # output_3 = self.l3(text_embeds) # 先只看text embedding 为啥是nan了
-        output = self.l4(output_3)
+        output = self.l4(combined_output)
         return output
