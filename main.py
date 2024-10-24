@@ -26,8 +26,17 @@ def main(opt):
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=experiment.tokenizer)
         # experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
-        for epoch in range(opt["num_epochs"]):
+        fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_1_{opt["label_type"]}.pth'
+        if os.path.exists(fileName):
+            print("loading model")
+            start_epoch = experiment.load_checkpoint(fileName)
+        else:
+            start_epoch = 0
+        print("training")
+        for epoch in range(start_epoch, opt['num_epochs']):
             epoch_time = experiment.train(epoch)
+            experiment.save_checkpoint(
+                f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
 
         predicts, labels = experiment.validate()
