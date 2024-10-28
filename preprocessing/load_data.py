@@ -230,7 +230,7 @@ def load_dataset(opt):
 
 def build_dataloader(opt, processor=None):
     df_train, df_val, df_test = load_dataset(opt)
-    print(df_train.head())
+    # print(df_train.head())
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
     print(f'testing set:{df_test.shape}')
@@ -259,7 +259,9 @@ def build_dataloader(opt, processor=None):
     #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
     #     test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     elif opt["model"] == "bert_vit":
-        tokenizer, vit_processor = processor
+        # tokenizer, vit_processor = processor
+        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
         train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
 
     elif opt["model"] == "albef":
@@ -271,7 +273,7 @@ def build_dataloader(opt, processor=None):
         # train_set, val_set, test_set = prepare_dataset_albef(opt)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': True}
+                    'shuffle': False}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
