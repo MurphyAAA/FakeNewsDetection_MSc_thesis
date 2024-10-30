@@ -259,11 +259,11 @@ def build_dataloader(opt, processor=None):
     #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
     #     test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     elif opt["model"] == "bert_vit":
-        # tokenizer, vit_processor = processor
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
-        train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
-
+        tokenizer, vit_processor = processor
+        # train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
+        train_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, opt["data_path"])
+        val_set = CustomDataset_Bert_Vit(df_val, tokenizer, opt['max_len'], vit_processor, opt["data_path"])
+        test_set = CustomDataset_Bert_Vit(df_test, tokenizer, opt['max_len'], vit_processor, opt["data_path"])
     elif opt["model"] == "albef":
         text_processor, img_processor = processor
         # text_processor["eval"] 不能传text_processor，因为是个字典，不能pickle
