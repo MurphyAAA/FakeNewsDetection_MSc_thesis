@@ -273,7 +273,7 @@ def build_dataloader(opt, processor=None):
         # train_set, val_set, test_set = prepare_dataset_albef(opt)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': False}
+                    'shuffle': True}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
