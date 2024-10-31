@@ -133,9 +133,6 @@ class CustomDataset_Bert_Vit(Dataset):
 
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
         img = Image.open(img_path).convert("RGB")
-        convert_tensor = transforms.ToTensor()
-        # image_shape = [convert_tensor(x).shape for x in images]
-        print(self.img_id[index], convert_tensor(img).shape)
         try:
             inputs = self.vit_processor(images=img, return_tensors="pt")
             pixel_values = inputs["pixel_values"].clone().detach()
@@ -276,7 +273,7 @@ def build_dataloader(opt, processor=None):
         # train_set, val_set, test_set = prepare_dataset_albef(opt)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
-                    'shuffle': False}
+                    'shuffle': True}
     val_params = {'batch_size': opt['batch_size'],
                   'num_workers': opt['num_workers'],
                   'shuffle': False}
