@@ -8,7 +8,8 @@
 import pdb
 
 import torch
-from transformers import BertModel, ViTModel, BertTokenizer, ViTImageProcessor
+from transformers import BertModel, ViTModel, BertTokenizer, ViTImageProcessor, DistilBertTokenizer, \
+    DistilBertForSequenceClassification, AutoModel, AutoTokenizer
 
 
 class Bert_VitClass(torch.nn.Module):
@@ -17,22 +18,29 @@ class Bert_VitClass(torch.nn.Module):
         self.bertmodel = BertModel.from_pretrained('bert-base-uncased')  # embedding
         self.vitmodel = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k',
                                                                num_labels=int(opt['label_type'][0]))
+        self.sentiment_model = AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         self.vit_processor = ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k')
+        self.sentiment_tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
 
         # self.dropout = torch.nn.Dropout(0.3)
-
+        self.emotion_layer = torch.nn.Linear(4, 128)
+        self.bn = torch.nn.BatchNorm1d(128)
+        self.relu = torch.nn.ReLU()
         if opt["label_type"] == "2_way":
-            self.fc = torch.nn.Linear(768+768, 2)  # Bert base 的H是768
+            self.fc = torch.nn.Linear(768+128+768, 2)  # Bert base 的H是768
         elif opt["label_type"] == "3_way":
-            self.fc = torch.nn.Linear(768+768, 3)  # Bert base 的H是768
+            self.fc = torch.nn.Linear(768+128+768, 3)  # Bert base 的H是768
         else:  # 6_way
-            self.fc = torch.nn.Linear(768+768, 6)  # Bert base 的H是768
+            self.fc = torch.nn.Linear(768+128+768, 6)  # Bert base 的H是768
 
-    def forward(self, ids, mask, token_type_ids, pixel_values, labels):
+    def forward(self, ids, mask, token_type_ids, pixel_values, emotions, labels):
         _, text_embeds = self.bertmodel(ids, attention_mask=mask, token_type_ids=token_type_ids, return_dict=False)
         _, img_embeds = self.vitmodel(pixel_values=pixel_values, return_dict=False)
-        combined_output = torch.cat((text_embeds, img_embeds), dim=1)
+        emotions = self.emotion_layer(emotions)
+        emotions = self.bn(emotions)
+        emotions = self.relu(emotions)
+        combined_output = torch.cat((text_embeds, emotions, img_embeds), dim=1)
         # output = self.dropout(combined_output)
         output = self.fc(combined_output)
         return output

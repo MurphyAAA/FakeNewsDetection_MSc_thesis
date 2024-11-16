@@ -12,6 +12,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification, ViTImageProcessor
 from PIL import Image, ImageFile
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+
 import preprocessing
 from datasets import Dataset as D
 from torchvision import transforms
@@ -131,6 +133,13 @@ class CustomDataset_Bert_Vit(Dataset):
         mask = inputs['attention_mask']
         token_type_ids = inputs["token_type_ids"]
 
+        # sentiment analysis
+        analyzer = SentimentIntensityAnalyzer()
+        scores = analyzer.polarity_scores(text)
+        emotion_vector = [scores['pos'], scores['neg'], scores['neu'], scores['compound']]
+        #### 改成使用bert 的模型，不能只传4个数字，要用输出的前一层，embedding1！！！！！！
+
+
         img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
         img = Image.open(img_path).convert("RGB")
         try:
@@ -145,7 +154,8 @@ class CustomDataset_Bert_Vit(Dataset):
             "ids": torch.tensor(ids, dtype=torch.long),
             "mask": torch.tensor(mask, dtype=torch.long),
             "token_type_ids": torch.tensor(token_type_ids, dtype=torch.long),
-            "labels": self.label[index]
+            "labels": self.label[index],
+            "emotion_vector": torch.tensor(emotion_vector, dtype=torch.float)
         }
 
 

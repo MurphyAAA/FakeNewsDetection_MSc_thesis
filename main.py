@@ -111,8 +111,11 @@ def main(opt):
 
         start_epoch = load_model(experiment)
         # train
+        tot_loss = 0
         for epoch in range(start_epoch, opt['num_epochs']):
-            epoch_time = experiment.train(epoch)
+            epoch_time, loss = experiment.train(epoch, tot_loss)
+            tot_loss = loss
+            print(tot_loss)
             experiment.save_checkpoint(
                 f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")

@@ -58,9 +58,8 @@ class Bert_VitExperiment:
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
-    def train(self, epoch):
+    def train(self, epoch, tot_loss):
         print(f"Start training at epoch {epoch}")
-        tot_loss = 0
         print_loss = 0
         epoch_time =0
         self.model.train()
@@ -72,12 +71,13 @@ class Bert_VitExperiment:
             token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
             labels = databatch["labels"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            emotions = databatch["emotion_vector"].to(self.device, dtype=torch.float)
             # 现在返回的就是一个1，要看一下模型输出，找到embedding
-            logits = self.model(ids, mask, token_type_ids, pixel_values, labels)
+            logits = self.model(ids, mask, token_type_ids, pixel_values, emotions, labels)
 
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
-            self.writer.add_scalar(f"loss_{self.opt['label_type']}_{epoch}", loss.item(), idx)
+            self.writer.add_scalar(f"loss_{self.opt['label_type']}", loss.item(), epoch*len(self.train_loader) + idx)
             tot_loss += loss.item()
             print_loss += loss.item()
             self.optimizer.zero_grad()
@@ -88,11 +88,11 @@ class Bert_VitExperiment:
                 batch_time = (end_time - start_time)
                 start_time = time.time()
                 print(
-                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{batch_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
+                    f"Epoch: {epoch}, batch: {len(self.train_loader) + 1}/{idx + 1}, avg_loss: {tot_loss / (epoch*len(self.train_loader)+idx + 1)}, loss_per_{self.opt['print_every']}: {print_loss / self.opt['print_every']}, time:{batch_time:.2f}s")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 print_loss = 0
         epoch_end = time.time()
         epoch_time = epoch_end- epoch_start
-        return epoch_time
+        return epoch_time, tot_loss
 
     def validation(self):
         print("Validation Started")
@@ -106,8 +106,8 @@ class Bert_VitExperiment:
                 token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
                 labels = databatch["labels"].to(self.device, dtype=torch.long)
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
-
-                logits = self.model(ids, mask, token_type_ids, pixel_values, labels)
+                emotions = databatch["emotion_vector"].to(self.device, dtype=torch.float)
+                logits = self.model(ids, mask, token_type_ids, pixel_values, emotions, labels)
 
                 pred = torch.argmax(logits, dim=-1)
                 fin_label.extend(labels.cpu().detach().tolist())
