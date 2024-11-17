@@ -5,6 +5,8 @@
 @File ：bert_vit_exper.py
 @IDE ：PyCharm
 """
+import pdb
+
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
@@ -19,6 +21,7 @@ class Bert_VitExperiment:
         self.model = Bert_VitClass(opt)
         self.tokenizer = self.model.tokenizer
         self.vit_processor = self.model.vit_processor
+        self.sentiment_tokenizer = self.model.sentiment_tokenizer
         self.model.to(self.device)
 
         self.train_loader = None
@@ -71,9 +74,10 @@ class Bert_VitExperiment:
             token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
             labels = databatch["labels"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
-            emotions = databatch["emotion_vector"].to(self.device, dtype=torch.float)
+            emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
+            emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
             # 现在返回的就是一个1，要看一下模型输出，找到embedding
-            logits = self.model(ids, mask, token_type_ids, pixel_values, emotions, labels)
+            logits = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
 
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
@@ -106,8 +110,9 @@ class Bert_VitExperiment:
                 token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
                 labels = databatch["labels"].to(self.device, dtype=torch.long)
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
-                emotions = databatch["emotion_vector"].to(self.device, dtype=torch.float)
-                logits = self.model(ids, mask, token_type_ids, pixel_values, emotions, labels)
+                emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
+                emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
+                logits = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
 
                 pred = torch.argmax(logits, dim=-1)
                 fin_label.extend(labels.cpu().detach().tolist())

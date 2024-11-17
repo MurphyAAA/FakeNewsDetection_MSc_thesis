@@ -24,23 +24,24 @@ class Bert_VitClass(torch.nn.Module):
         self.sentiment_tokenizer = AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
 
         # self.dropout = torch.nn.Dropout(0.3)
-        self.emotion_layer = torch.nn.Linear(4, 128)
-        self.bn = torch.nn.BatchNorm1d(128)
+        self.emotion_layer = torch.nn.Linear(768, 384)
+        self.bn = torch.nn.BatchNorm1d(384)
         self.relu = torch.nn.ReLU()
         if opt["label_type"] == "2_way":
-            self.fc = torch.nn.Linear(768+128+768, 2)  # Bert base 的H是768
+            self.fc = torch.nn.Linear(768+384+768, 2)  # Bert base 的H是768
         elif opt["label_type"] == "3_way":
-            self.fc = torch.nn.Linear(768+128+768, 3)  # Bert base 的H是768
+            self.fc = torch.nn.Linear(768+384+768, 3)  # Bert base 的H是768
         else:  # 6_way
-            self.fc = torch.nn.Linear(768+128+768, 6)  # Bert base 的H是768
+            self.fc = torch.nn.Linear(768+384+768, 6)  # Bert base 的H是768
 
-    def forward(self, ids, mask, token_type_ids, pixel_values, emotions, labels):
+    def forward(self, ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels):
         _, text_embeds = self.bertmodel(ids, attention_mask=mask, token_type_ids=token_type_ids, return_dict=False)
         _, img_embeds = self.vitmodel(pixel_values=pixel_values, return_dict=False)
-        emotions = self.emotion_layer(emotions)
-        emotions = self.bn(emotions)
-        emotions = self.relu(emotions)
-        combined_output = torch.cat((text_embeds, emotions, img_embeds), dim=1)
+        _, emo_embeds = self.sentiment_model(input_ids=emo_ids, attention_mask=emo_mask, return_dict=False)
+        emo_embeds = self.emotion_layer(emo_embeds)
+        # emo_embeds = self.bn(emo_embeds)
+        # emo_embeds = self.relu(emo_embeds)
+        combined_output = torch.cat((text_embeds, emo_embeds, img_embeds), dim=1)
         # output = self.dropout(combined_output)
         output = self.fc(combined_output)
         return output
