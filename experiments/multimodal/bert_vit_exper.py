@@ -9,10 +9,10 @@ import pdb
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
-
+import numpy as np
 from models.bert_vit_model import Bert_VitClass
 import time
-
+from scipy.special import softmax
 class Bert_VitExperiment:
     def __init__(self, opt):
         self.opt = opt
