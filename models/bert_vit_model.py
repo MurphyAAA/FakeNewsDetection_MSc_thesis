@@ -45,8 +45,8 @@ class Bert_VitClass(torch.nn.Module):
         emo_embeds = last_hidden_states.mean(dim=1) # pooling 16*768 .max(dim=1).values
 
         emo_embeds = self.emotion_layer(emo_embeds)
-        emo_embeds = self.bn(emo_embeds)
-        emo_embeds = self.relu(emo_embeds)
+        # emo_embeds = self.bn(emo_embeds)
+        # emo_embeds = self.relu(emo_embeds)
         combined_output = torch.cat((text_embeds, emo_embeds, img_embeds), dim=1)
         output = self.fc(combined_output)
         return output
