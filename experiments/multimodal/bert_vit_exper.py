@@ -28,7 +28,9 @@ class Bert_VitExperiment:
         self.val_loader = None
         self.test_loader = None
 
+        self.w = [2, 1] # loss 的权重
         self.ent_loss = torch.nn.CrossEntropyLoss()
+        self.mse_loss = torch.nn.MSELoss() # L2 loss
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
         # self.optimizer = torch.optim.AdamW([
         #     {'params': self.model.bertmodel.parameters(), 'lr': 5e-5},  # 对BERT部分使用较小的学习率
@@ -61,6 +63,10 @@ class Bert_VitExperiment:
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         print(f"Checkpoint loaded. Resuming training from epoch {epoch}")
         return epoch
+
+    def freeze_layer(self, layerName, setState):
+        for param in layerName.parameters():
+            param.requires_grad = not setState
     def train(self, epoch, tot_loss):
         print(f"Start training at epoch {epoch}")
         print_loss = 0
@@ -76,16 +82,18 @@ class Bert_VitExperiment:
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
             emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
             emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
-            # 现在返回的就是一个1，要看一下模型输出，找到embedding
-            logits = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
+            logits, text_embeds, emo_embeds = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
 
+            self.freeze_layer(self.model.sentiment_model, True)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
-            self.writer.add_scalar(f"loss_{self.opt['label_type']}", loss.item(), epoch*len(self.train_loader) + idx)
-            tot_loss += loss.item()
-            print_loss += loss.item()
+            emo_loss = self.mse_loss(text_embeds, emo_embeds)
+            L = self.w[0] * loss + self.w[1] * emo_loss
+            self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
+            tot_loss += L.item()
+            print_loss += L.item()
             self.optimizer.zero_grad()
-            loss.backward()
+            L.backward()
             self.optimizer.step()
             if idx % self.opt["print_every"] == 0:
                 end_time = time.time()
@@ -112,7 +120,7 @@ class Bert_VitExperiment:
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
                 emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
-                logits = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
+                logits,_,_ = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
 
                 pred = torch.argmax(logits, dim=-1)
                 fin_label.extend(labels.cpu().detach().tolist())
