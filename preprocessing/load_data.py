@@ -104,12 +104,13 @@ class CustomDataset_Vit(Dataset):
         return inputs
 
 class CustomDataset_Bert_Vit(Dataset):
-    def __init__(self, dataframe, bert_tokenizer, max_len, vit_processor, sentiment_tokenizer, data_path):
+    def __init__(self, dataframe, max_len, bert_tokenizer, vit_processor, text_senti_proce, vis_senti_proce, data_path):
         self.data = dataframe
         self.bert_tokenizer = bert_tokenizer
         self.max_len = max_len
         self.vit_processor = vit_processor
-        self.sentiment_tokenizer = sentiment_tokenizer
+        self.text_senti_proce = text_senti_proce
+        self.vis_senti_proce = vis_senti_proce
         self.text = dataframe["clean_title"]
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
@@ -139,7 +140,7 @@ class CustomDataset_Bert_Vit(Dataset):
         # scores = analyzer.polarity_scores(text)
         # emotion_vector = [scores['pos'], scores['neg'], scores['neu'], scores['compound']]
         #### 改成使用bert 的模型，不能只传4个数字，要用输出的前一层，embedding1！！！！！！
-        encoded_input = self.sentiment_tokenizer(text,
+        encoded_input = self.text_senti_proce(text,
                                                  max_length=self.max_len,
                                                  padding="max_length",
                                                  truncation=True,)
@@ -152,11 +153,16 @@ class CustomDataset_Bert_Vit(Dataset):
             inputs = self.vit_processor(images=img, return_tensors="pt")
             pixel_values = inputs["pixel_values"].clone().detach()
             pixel_values = torch.squeeze(pixel_values, dim=0)
+
+            inputs = self.vis_senti_proce(images=img, return_tensors="pt")
+            pixel_values_emo = inputs["pixel_values"].clone().detach()
+            pixel_values_emo = torch.squeeze(pixel_values_emo, dim=0)
         except ValueError as e:
             print(f"Error processing image {img_path}: {e}")
             raise
         return {
             "pixel_values": pixel_values,
+            "pixel_values_emo": pixel_values_emo,
             "ids": torch.tensor(ids, dtype=torch.long),
             "mask": torch.tensor(mask, dtype=torch.long),
             "token_type_ids": torch.tensor(token_type_ids, dtype=torch.long),
@@ -277,11 +283,11 @@ def build_dataloader(opt, processor=None):
     #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
     #     test_set = CustomDataset_Vit(df_test, processor, opt['data_path'])
     elif opt["model"] == "bert_vit":
-        tokenizer, vit_processor, sentiment_tokenizer = processor
+        tokenizer, vit_processor, text_senti_proce, vis_senti_proce = processor
         # train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
-        train_set = CustomDataset_Bert_Vit(df_train, tokenizer, opt['max_len'], vit_processor, sentiment_tokenizer, opt["data_path"])
-        val_set = CustomDataset_Bert_Vit(df_val, tokenizer, opt['max_len'], vit_processor, sentiment_tokenizer, opt["data_path"])
-        test_set = CustomDataset_Bert_Vit(df_test, tokenizer, opt['max_len'], vit_processor, sentiment_tokenizer, opt["data_path"])
+        train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, opt["data_path"])
+        val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, opt["data_path"])
+        test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, opt["data_path"])
     elif opt["model"] == "albef":
         text_processor, img_processor = processor
         # text_processor["eval"] 不能传text_processor，因为是个字典，不能pickle

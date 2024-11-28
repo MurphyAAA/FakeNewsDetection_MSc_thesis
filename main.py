@@ -104,8 +104,8 @@ def main(opt):
         trainer.save_metrics("eval", metrics)
     elif opt["model"] == "bert_vit":
         experiment = Bert_VitExperiment(opt)
-        processor = (experiment.tokenizer, experiment.vit_processor, experiment.sentiment_tokenizer)
-        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=processor)
+        processors = (experiment.processors['bert'], experiment.processors['vit'], experiment.processors['text_sentiment'], experiment.processors['visual_sentiment'])
+        train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=processors)
         experiment.set_weighted_loss(class_weight=train_class_weights)
         experiment.set_dataloader(train_loader, val_loader, test_loader)
 

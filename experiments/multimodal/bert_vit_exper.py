@@ -19,16 +19,17 @@ class Bert_VitExperiment:
         self.writer = SummaryWriter(opt['log_dir']+opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = Bert_VitClass(opt)
-        self.tokenizer = self.model.tokenizer
-        self.vit_processor = self.model.vit_processor
-        self.sentiment_tokenizer = self.model.sentiment_tokenizer
+        # self.tokenizer = self.model.tokenizer
+        # self.vit_processor = self.model.vit_processor
+        # self.sentiment_tokenizer = self.model.sentiment_tokenizer
+        self.processors = self.model.processors
         self.model.to(self.device)
 
         self.train_loader = None
         self.val_loader = None
         self.test_loader = None
 
-        self.w = [2, 1] # loss 的权重
+        self.w = [2, 1, 1] # loss 的权重
         self.ent_loss = torch.nn.CrossEntropyLoss()
         self.mse_loss = torch.nn.MSELoss() # L2 loss
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
@@ -74,21 +75,24 @@ class Bert_VitExperiment:
         self.model.train()
         start_time = time.time()
         epoch_start = time.time()
+        self.freeze_layer(self.model.text_sentiment, True)
+        self.freeze_layer(self.model.visual_sentiment, True)
         for idx, databatch in enumerate(self.train_loader):
             ids = databatch["ids"].to(self.device, dtype=torch.long)
             mask = databatch["mask"].to(self.device, dtype=torch.long)
             token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
             labels = databatch["labels"].to(self.device, dtype=torch.long)
             pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+            pixel_values_emo = databatch["pixel_values_emo"].to(self.device, dtype=torch.float)
             emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
             emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
-            logits, text_embeds, emo_embeds = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
+            logits, text_embeds, img_embeds, txt_emo_embeds, vis_emo_embeds = self.model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, labels)
 
-            self.freeze_layer(self.model.sentiment_model, True)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
-            emo_loss = self.mse_loss(text_embeds, emo_embeds)
-            L = self.w[0] * loss + self.w[1] * emo_loss
+            txt_emo_loss = self.mse_loss(text_embeds, txt_emo_embeds)
+            vis_emo_loss = self.mse_loss(img_embeds, vis_emo_embeds)
+            L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss
             self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             tot_loss += L.item()
             print_loss += L.item()
@@ -118,9 +122,10 @@ class Bert_VitExperiment:
                 token_type_ids = databatch["token_type_ids"].to(self.device, dtype=torch.long)
                 labels = databatch["labels"].to(self.device, dtype=torch.long)
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
+                pixel_values_emo = databatch["pixel_values_emo"].to(self.device, dtype=torch.float)
                 emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
                 emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
-                logits,_,_ = self.model(ids, mask, token_type_ids, pixel_values, emo_ids, emo_mask, labels)
+                logits,_,_,_,_ = self.model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, labels)
 
                 pred = torch.argmax(logits, dim=-1)
                 fin_label.extend(labels.cpu().detach().tolist())
