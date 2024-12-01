@@ -32,6 +32,7 @@ class Bert_VitExperiment:
         self.w = [2, 1, 1] # loss 的权重
         self.ent_loss = torch.nn.CrossEntropyLoss()
         self.mse_loss = torch.nn.MSELoss() # L2 loss
+        self.cosine_similarity = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
         # self.optimizer = torch.optim.AdamW([
         #     {'params': self.model.bertmodel.parameters(), 'lr': 5e-5},  # 对BERT部分使用较小的学习率
@@ -90,8 +91,8 @@ class Bert_VitExperiment:
 
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
-            txt_emo_loss = self.mse_loss(text_embeds, txt_emo_embeds)
-            vis_emo_loss = self.mse_loss(img_embeds, vis_emo_embeds)
+            txt_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_emo_embeds)) #
+            vis_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, vis_emo_embeds))
             L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss
             self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             tot_loss += L.item()
