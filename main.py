@@ -20,7 +20,7 @@ import numpy as np
 """
 def load_model(experiment):
     start_epoch = 0
-    for i in range(opt["num_epochs"], 0, -1):
+    for i in range(opt["num_epochs"], -1, -1):
         fileName = f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{i}_{opt["label_type"]}.pth'
         if os.path.exists(fileName):
             print("loading model")
