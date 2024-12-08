@@ -19,6 +19,12 @@ class Bert_VitExperiment:
         self.writer = SummaryWriter(opt['log_dir']+opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = Bert_VitClass(opt)
+        modified_opt = opt.copy()  # 创建 opt 的副本
+        modified_opt['label_type'] = '3_way'  # 修改 param2 的值
+        self.teacher_model = Bert_VitClass(modified_opt)
+        checkpoint = torch.load(f'{opt["output_path"]}/checkpoint_bert_vit_3_way.pth')
+        self.teacher_model.load_state_dict(checkpoint['model'])
+        self.teacher_model.to(self.device)
         # self.tokenizer = self.model.tokenizer
         # self.vit_processor = self.model.vit_processor
         # self.sentiment_tokenizer = self.model.sentiment_tokenizer
@@ -29,7 +35,7 @@ class Bert_VitExperiment:
         self.val_loader = None
         self.test_loader = None
 
-        self.w = [2, 1, 1] # loss 的权重
+        self.w = [2, 1, 1, 1, 1] # loss 的权重
         self.ent_loss = torch.nn.CrossEntropyLoss()
         self.mse_loss = torch.nn.MSELoss() # L2 loss
         self.cosine_similarity = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
@@ -88,12 +94,14 @@ class Bert_VitExperiment:
             emo_ids = databatch["emo_ids"].to(self.device, dtype=torch.long)
             emo_mask = databatch["emo_mask"].to(self.device, dtype=torch.long)
             logits, text_embeds, img_embeds, txt_emo_embeds, vis_emo_embeds = self.model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, labels)
-
+            _, t_text_embeds, t_img_embeds, _, _ = self.teacher_model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, labels)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
             txt_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_emo_embeds)) #
-            vis_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, vis_emo_embeds))
-            L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss
+            vis_emo_loss = torch.mean(1 - self.cosine_similarity(img_embeds, vis_emo_embeds)) # hpc 上这手动改了
+            txt_distillation_loss = torch.mean(1 - self.cosine_similarity(text_embeds, t_text_embeds))
+            img_distillation_loss = torch.mean(1 - self.cosine_similarity(img_embeds, t_img_embeds))
+            L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss + self.w[3] * txt_distillation_loss + self.w[4] * img_distillation_loss
             self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             tot_loss += L.item()
             print_loss += L.item()

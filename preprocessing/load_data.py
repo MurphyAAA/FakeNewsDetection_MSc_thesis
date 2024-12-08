@@ -37,7 +37,7 @@ title
 upvote_ratio	
 2_way_label	0:fake, 1:true
 3_way_label	 0: complete true, 1: sample is fake text is true, 2: sample is fake with false text
-6_way_label
+6_way_label  0:True, 1:Satire/Parody, 2:Misleading Content, 3:Imposter Content, 4:False Connection, 5:Manipulated Content
 
 对于subreddit为 photoshopbattles 的label全是True
 """
@@ -219,7 +219,7 @@ def read_file(data_path, filename):
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')#[:800]
+    df_train = read_file(opt['data_path'], 'multimodal_train')#[:300]
     df_val = read_file(opt['data_path'], 'multimodal_validate')#[:300]
     df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:800]
     if opt["label_type"] == "2_way":
