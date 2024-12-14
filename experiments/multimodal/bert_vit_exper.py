@@ -80,6 +80,7 @@ class Bert_VitExperiment:
         epoch_start = time.time()
         self.freeze_layer(self.model.text_sentiment, True)
         self.freeze_layer(self.model.visual_sentiment, True)
+        self.freeze_layer(self.model.intent_detector, True)
         for idx, databatch in enumerate(self.train_loader):
             ids = databatch["ids"].to(self.device, dtype=torch.long)
             mask = databatch["mask"].to(self.device, dtype=torch.long)
