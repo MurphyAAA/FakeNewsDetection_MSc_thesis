@@ -11,9 +11,12 @@ def parse_arguments():
     parse = argparse.ArgumentParser()
 
     #hyperparams
-    parse.add_argument('--lr', type=float, default=5e-05, help='Learning rate.')# 5e-5, 4e-5, 3e-5
+    parse.add_argument('--lr', type=float, default=5e-04, help='Learning rate.')# 5e-5, 4e-5, 3e-5
     parse.add_argument('--num_epochs', type=int, default=3, help='Number of training epochs.') # 3
     parse.add_argument('--batch_size', type=int, default=32)
+    parse.add_argument('--w', type=float, default=[2, 1, 1, 0.5], help="List of weights (default: [2, 1, 1, 1])")
+    parse.add_argument('--eps', type=float, default=1e-6)
+    parse.add_argument('--num_heads', type=int, default=8)
 
     parse.add_argument('--num_workers', type=int, default=1)
     parse.add_argument('--max_len', type=int, default=100) # 文本的最大长度

@@ -80,7 +80,7 @@ class Bert_VitClass(torch.nn.Module):
         # self.visual_sentiment= AutoModelForImageClassification.from_pretrained("kittendev/visual_emotional_analysis")
         self.visual_sentiment = VisualSentimentModel()
         self.intent_detector = AutoModelForSequenceClassification.from_pretrained("bespin-global/klue-roberta-small-3i4k-intent-classification" )
-        self.multimodal_block = MultimodalFusionBlock(embed_dim=768, num_heads=8)  # text-embedding.shape[1]
+        self.multimodal_block = MultimodalFusionBlock(embed_dim=768, num_heads=opt['num_heads'])  # text-embedding.shape[1]
         self.processors = {
             'bert': BertTokenizer.from_pretrained('bert-base-uncased'),
             'vit': ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k'),

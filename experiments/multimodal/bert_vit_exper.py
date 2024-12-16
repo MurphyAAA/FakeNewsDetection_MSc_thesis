@@ -31,10 +31,10 @@ class Bert_VitExperiment:
         self.val_loader = None
         self.test_loader = None
 
-        self.w = [2, 1, 1, 1]  # loss 的权重
+        self.w = opt['w']  # loss 的权重
         self.ent_loss = torch.nn.CrossEntropyLoss()
         self.mse_loss = torch.nn.MSELoss() # L2 loss
-        self.cosine_similarity = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+        self.cosine_similarity = torch.nn.CosineSimilarity(dim=1, eps=opt['eps'])
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
         # self.optimizer = torch.optim.AdamW([
         #     {'params': self.model.bertmodel.parameters(), 'lr': 5e-5},  # 对BERT部分使用较小的学习率
