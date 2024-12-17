@@ -16,7 +16,7 @@ def parse_arguments():
     parse.add_argument('--batch_size', type=int, default=32)
     parse.add_argument('--w', type=float, default=[2, 1, 1, 0.5], help="List of weights (default: [2, 1, 1, 1])")
     parse.add_argument('--eps', type=float, default=1e-6)
-    parse.add_argument('--num_heads', type=int, default=8)
+    parse.add_argument('--num_heads', type=int, default=12)
 
     parse.add_argument('--num_workers', type=int, default=1)
     parse.add_argument('--max_len', type=int, default=100) # 文本的最大长度
