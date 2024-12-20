@@ -219,17 +219,17 @@ class CustomDataset_Albef(Dataset):
             "labels": torch.tensor(self.label[index], dtype=torch.long)
 
         }
-def read_file(data_path, filename):
-    df = pd.read_csv(f'{data_path}/{filename}.tsv', delimiter='\t')
+def read_file(data_path, filename, delimiter):
+    df = pd.read_csv(f'{data_path}/{filename}', delimiter=delimiter)
 
     # print(df.head())
     return df
 
 
 def load_dataset(opt):
-    df_train = read_file(opt['data_path'], 'multimodal_train')#[:300]
-    df_val = read_file(opt['data_path'], 'multimodal_validate')#[:300]
-    df_test = read_file(opt['data_path'], 'multimodal_test_public')#[:800]
+    df_train = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_train.tsv', '\t')#[:300]
+    df_val = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_validate.tsv', '\t')#[:300]
+    df_test = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_test_public.tsv', '\t')#[:800]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -259,8 +259,15 @@ def load_dataset(opt):
     df_train_filter, df_val_filter, df_test_filter = preprocessing.filter_image.get_filter_dataset(df_train, df_val, df_test)
     return df_train_filter, df_val_filter, df_test_filter
 
+def load_dataset2(opt):
+    df = read_file(f'{opt["data_path"]}/dataset2', 'all_data.csv', ',')  # [:300]
+    selected_columns = ["idx", "text", "type", "main_img_url"]
+    df = df[selected_columns]
+    print(df.head())
+    pdb.set_trace()
 
 def build_dataloader(opt, processor=None):
+    # load_dataset2(opt)
     df_train, df_val, df_test = load_dataset(opt)
     # print(df_train.head())
     print(f'training set:{df_train.shape}')
@@ -293,15 +300,15 @@ def build_dataloader(opt, processor=None):
     elif opt["model"] == "bert_vit":
         tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce = processor
         # train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
-        train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, opt["data_path"])
-        val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, opt["data_path"])
-        test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, opt["data_path"])
+        train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit')
+        val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit')
+        test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit')
     elif opt["model"] == "albef":
         text_processor, img_processor = processor
         # text_processor["eval"] 不能传text_processor，因为是个字典，不能pickle
-        train_set = CustomDataset_Albef(df_train, text_processor["eval"], img_processor["eval"], opt['data_path'])
-        val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"], opt['data_path'])
-        test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"], opt['data_path'])
+        train_set = CustomDataset_Albef(df_train, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
+        val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
+        test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
         # train_set, val_set, test_set = prepare_dataset_albef(opt)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
@@ -323,7 +330,7 @@ def prepare_dataset(opt, processor):
 
     def transform(example_batch):
         # Take a list of PIL images and turn them to pixel values
-        images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
+        images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
                   example_batch['id']]
         inputs = processor(images, return_tensors='pt')
         # Don't forget to include the labels!
@@ -353,7 +360,7 @@ def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
     token_type_ids = inputs["token_type_ids"]
 
     # Take a list of PIL images and turn them to pixel values
-    images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
+    images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
               example_batch['id']]
     # convert_tensor = transforms.ToTensor()
     # image_shape = [convert_tensor(x).shape for x in images]
@@ -387,7 +394,7 @@ def prepare_dataset_bert_vit(opt, bert_processor, vit_processor):
 def transform_clip(example_batch, processor, opt):
     texts = [" ".join(x.split()) for x in example_batch["clean_title"]]
 
-    images = [Image.open(f'{opt["data_path"]}/public_image_set/{x}.jpg').convert("RGB") for x in
+    images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
               example_batch['id']]
     # image_type=[isinstance(img, PIL.Image.Image) for img in images]
     # print(example_batch['id'], image_type)
