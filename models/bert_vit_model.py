@@ -59,15 +59,15 @@ class MultimodalFusionBlock(torch.nn.Module):
         self.ffn_layer_norm = nn.LayerNorm(embed_dim)
     def forward(self, text_embeds, image_embeds):
         # Self-Attention: Intra-text dependencies
-        text_self, _ = self.self_attention(text_embeds, text_embeds, text_embeds)
-        text_embeds = self.self_attn_layer_norm(text_embeds + text_self)  # 残差连接 归一化
+        # text_self, _ = self.self_attention(text_embeds, text_embeds, text_embeds)
+        # text_embeds = self.self_attn_layer_norm(text_embeds + text_self)  # 残差连接 归一化
         # Cross-Attention: Text as Query, Image as Key/Value
         text_with_image, _ = self.cross_attention(text_embeds, image_embeds, image_embeds)
         fused_embeds = self.cross_attn_layer_norm(text_embeds + text_with_image)
 
         # Feed Forward Network
-        text_ffn = self.feed_forward(fused_embeds)
-        fused_embeds = self.ffn_layer_norm(fused_embeds + text_ffn)
+        fused_embeds = self.feed_forward(fused_embeds)
+        # fused_embeds = self.ffn_layer_norm(fused_embeds + text_ffn)
 
         return fused_embeds
         
