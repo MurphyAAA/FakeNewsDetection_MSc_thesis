@@ -99,7 +99,7 @@ class Bert_VitExperiment:
             txt_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_emo_embeds))
             vis_emo_loss = torch.mean(1 - self.cosine_similarity(img_embeds, vis_emo_embeds))
             txt_intent_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_intent_embeds))
-            L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss #+ self.w[3] * txt_intent_loss
+            L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss + self.w[3] * txt_intent_loss
             self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             tot_loss += L.item()
             print_loss += L.item()
