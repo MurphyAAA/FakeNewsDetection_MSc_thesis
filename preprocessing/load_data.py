@@ -153,7 +153,8 @@ class CustomDataset_Bert_Vit(Dataset):
         intent_ids = inputs['input_ids']
         intent_mask = inputs['attention_mask']
         # print(f'2-{inputs}')
-        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+        # img_path = f'{self.data_path}/{self.img_id[index]}.jpg'
+        img_path = f'{self.data_path}/{self.img_id[index]}'
         img = Image.open(img_path).convert("RGB")
         try:
             inputs = self.vit_processor(images=img, return_tensors="pt")
@@ -227,9 +228,9 @@ def read_file(data_path, filename, delimiter):
 
 
 def load_dataset(opt):
-    df_train = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_train.tsv', '\t')#[:300]
-    df_val = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_validate.tsv', '\t')#[:300]
-    df_test = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_test_public.tsv', '\t')#[:800]
+    df_train = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_train.tsv', '\t')[:300]
+    df_val = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_validate.tsv', '\t')[:300]
+    df_test = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_test_public.tsv', '\t')[:800]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -260,24 +261,42 @@ def load_dataset(opt):
     return df_train_filter, df_val_filter, df_test_filter
 
 def load_dataset2(opt):
-    df = read_file(f'{opt["data_path"]}/dataset2', 'all_data.csv', ',')  # [:300]
-    selected_columns = ["idx", "text", "type", "main_img_url"]
-    df = df[selected_columns]
-    print(df.head())
-    pdb.set_trace()
+    df = read_file(f'{opt["data_path"]}/dataset2', 'filtered_dataset.csv', ',')  # [:300]
+    df = df[['title', 'type', 'image']]
+    df['type'] = df['type'].map({'real': 1, 'fake': 0})
+    # 5463条数据 title-type-image
+    # title avg length: 68.27
+    # fake: 2864, real: 2599
+    df_real = df[df['type'] == 1]
+    df_fake = df[df['type'] == 0]
+    ratio = 0.2
+    split_index_real = int(len(df_real) * ratio)  # val, train
+    split_index_fake = int(len(df_fake) * ratio)
+
+    df_real_val, df_real_train = df_real[:split_index_real], df_real[split_index_real:]
+    df_fake_val, df_fake_train = df_fake[:split_index_fake], df_fake[split_index_fake:]
+    df_val = pd.concat([df_real_val, df_fake_val])
+    df_train = pd.concat([df_real_train, df_fake_train])
+
+    df_train = df_train.rename(columns={"title": "clean_title", "type": "label", "image": "id"}).reset_index(drop=True)
+    df_val = df_val.rename(columns={"title": "clean_title", "type": "label", "image": "id"}).reset_index(drop=True)
+
+    # print(df.head())
+    # pdb.set_trace()
+    return df_train, df_val, df_val
 
 def build_dataloader(opt, processor=None):
-    # load_dataset2(opt)
-    df_train, df_val, df_test = load_dataset(opt)
+    df_train, df_val, df_test = load_dataset2(opt)
+    # df_train, df_val, df_test = load_dataset(opt)
     # print(df_train.head())
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
     print(f'testing set:{df_test.shape}')
-    train_class_count = torch.bincount(torch.tensor(df_train['label']))
+    train_class_count = torch.bincount(torch.tensor(df_train['label'].values))
     tot_samples = df_train['label'].shape[0]
     train_class_weights = tot_samples/(int(opt["label_type"][0])*train_class_count)
     print("train", train_class_count)
-    print("val  ", torch.bincount(torch.tensor(df_val['label'])))
+    print("val  ", torch.bincount(torch.tensor(df_val['label'].values)))
 
     # maxlen=0
     # totlen=0
@@ -300,9 +319,20 @@ def build_dataloader(opt, processor=None):
     elif opt["model"] == "bert_vit":
         tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce = processor
         # train_set, val_set, test_set = prepare_dataset_bert_vit(opt, tokenizer, vit_processor)
-        train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit')
-        val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit')
-        test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit')
+        # train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit/public_image_set')
+        # val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit/public_image_set')
+        # test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit/public_image_set')
+
+        train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce,
+                                           vis_senti_proce, intent_proce,
+                                           f'{opt["data_path"]}/dataset2/images')
+        val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce,
+                                         vis_senti_proce, intent_proce, f'{opt["data_path"]}/dataset2/images')
+        test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce,
+                                          vis_senti_proce, intent_proce,
+                                          f'{opt["data_path"]}/dataset2/images')
+
+
     elif opt["model"] == "albef":
         text_processor, img_processor = processor
         # text_processor["eval"] 不能传text_processor，因为是个字典，不能pickle
