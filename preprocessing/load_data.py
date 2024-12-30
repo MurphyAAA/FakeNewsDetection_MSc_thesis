@@ -203,7 +203,8 @@ class CustomDataset_Albef(Dataset):
         text_input = text#self.text_processor["train"](text)
         text_input = self.txt_processor(text_input)
         # pdb.set_trace()
-        img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+        # img_path = f'{self.data_path}/public_image_set/{self.img_id[index]}.jpg'
+        img_path = f'{self.data_path}/{self.img_id[index]}'
         img = Image.open(img_path).convert("RGB")
         try:
             # image = self.transform(img)#self.img_processor["train"](img)#.unsqueeze(0)
@@ -311,7 +312,8 @@ def build_dataloader(opt, processor=None):
         val_set = CustomDataset(df_val, processor, opt['max_len'])
         test_set = CustomDataset(df_test, processor, opt['max_len'])
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/clip_large
-        train_set, val_set, test_set = prepare_dataset_clip(opt, processor)
+        train_set, val_set, test_set = prepare_dataset_clip(opt, processor, (df_train, df_val, df_test))
+
     # elif opt["model"] == "vit" or opt["model"] == "vit_large":
     #     train_set = CustomDataset_Vit(df_train, processor, opt['data_path'])
     #     val_set = CustomDataset_Vit(df_val, processor, opt['data_path'])
@@ -336,9 +338,17 @@ def build_dataloader(opt, processor=None):
     elif opt["model"] == "albef":
         text_processor, img_processor = processor
         # text_processor["eval"] 不能传text_processor，因为是个字典，不能pickle
-        train_set = CustomDataset_Albef(df_train, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
-        val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
-        test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
+        # train_set = CustomDataset_Albef(df_train, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
+        # val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
+        # test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"], f'{opt["data_path"]}/Fakeddit')
+
+        train_set = CustomDataset_Albef(df_train, text_processor["eval"], img_processor["eval"],
+                                        f'{opt["data_path"]}/dataset2/images')
+        val_set = CustomDataset_Albef(df_val, text_processor["eval"], img_processor["eval"],
+                                      f'{opt["data_path"]}/dataset2/images')
+        test_set = CustomDataset_Albef(df_test, text_processor["eval"], img_processor["eval"],
+                                       f'{opt["data_path"]}/dataset2/images')
+
         # train_set, val_set, test_set = prepare_dataset_albef(opt)
     train_params = {'batch_size': opt['batch_size'],
                     'num_workers': opt['num_workers'],
@@ -424,7 +434,9 @@ def prepare_dataset_bert_vit(opt, bert_processor, vit_processor):
 def transform_clip(example_batch, processor, opt):
     texts = [" ".join(x.split()) for x in example_batch["clean_title"]]
 
-    images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
+    # images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
+    #           example_batch['id']]
+    images = [Image.open(f'{opt["data_path"]}/dataset2/images/{x}').convert("RGB") for x in
               example_batch['id']]
     # image_type=[isinstance(img, PIL.Image.Image) for img in images]
     # print(example_batch['id'], image_type)
@@ -439,8 +451,10 @@ def transform_clip(example_batch, processor, opt):
     #     'pixel_values': inputs["pixel_values"].clone().detach(),
     #     "label": example_batch['label']
     # }
-def prepare_dataset_clip(opt, processor):
-    df_train, df_val, df_test = load_dataset(opt)
+def prepare_dataset_clip(opt, processor, df):
+    # df_train, df_val, df_test = load_dataset(opt)
+    df_train, df_val, df_test = df
+
     # 使用 functools.partial 固定住其他参数，只保留 example_batch
     from functools import partial
     transform_fn = partial(transform_clip, processor=processor, opt=opt)
