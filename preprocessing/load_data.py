@@ -366,11 +366,14 @@ def build_dataloader(opt, processor=None):
     return train_loader, val_loader, test_loader, train_class_weights
 
 def prepare_dataset(opt, processor):
-    df_train, df_val, df_test = load_dataset(opt)
+    # df_train, df_val, df_test = load_dataset(opt)
+    df_train, df_val, df_test = load_dataset2(opt)
 
     def transform(example_batch):
         # Take a list of PIL images and turn them to pixel values
-        images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
+        # images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
+        #           example_batch['id']]
+        images = [Image.open(f'{opt["data_path"]}/dataset2/images/{x}').convert("RGB") for x in
                   example_batch['id']]
         inputs = processor(images, return_tensors='pt')
         # Don't forget to include the labels!
@@ -384,50 +387,6 @@ def prepare_dataset(opt, processor):
     train_set = train_set.with_transform(transform)
     val_set = val_set.with_transform(transform)
     test_set = test_set.with_transform(transform)
-
-    return train_set, val_set, test_set
-
-def transform_bert_vit(example_batch, bert_processor, vit_processor, opt):
-    texts = [" ".join(x.split()) for x in example_batch["clean_title"]]
-    inputs=bert_processor(texts, None,
-        add_special_tokens=True,
-        max_length=opt["max_len"],
-        padding="max_length",
-        return_token_type_ids=True,
-        truncation=True)
-    ids = inputs['input_ids']
-    mask = inputs['attention_mask']
-    token_type_ids = inputs["token_type_ids"]
-
-    # Take a list of PIL images and turn them to pixel values
-    images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
-              example_batch['id']]
-    # convert_tensor = transforms.ToTensor()
-    # image_shape = [convert_tensor(x).shape for x in images]
-    # print(image_shape)
-    image_type = [isinstance(img, PIL.Image.Image) for img in images]
-    # print(example_batch['id'], image_type)
-    inputs = vit_processor(images, return_tensors='pt')
-    # Don't forget to include the labels!
-    inputs['labels'] = example_batch['label']
-    # pdb.set_trace()
-    inputs['ids'] = torch.tensor(ids, dtype=torch.long)
-    inputs['mask'] = torch.tensor(mask, dtype=torch.long)
-    inputs["token_type_ids"] = torch.tensor(token_type_ids, dtype=torch.long)
-    return inputs
-def prepare_dataset_bert_vit(opt, bert_processor, vit_processor):
-    df_train, df_val, df_test = load_dataset(opt)
-    # 使用 functools.partial 固定住其他参数，只保留 example_batch
-    from functools import partial
-    transform_fn = partial(transform_bert_vit, bert_processor=bert_processor, vit_processor=vit_processor, opt=opt)
-
-    train_set = D.from_pandas(df_train)
-    val_set = D.from_pandas(df_val)
-    test_set = D.from_pandas(df_test)
-
-    train_set = train_set.with_transform(transform_fn)
-    val_set = val_set.with_transform(transform_fn)
-    test_set = test_set.with_transform(transform_fn)
 
     return train_set, val_set, test_set
 
