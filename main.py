@@ -72,14 +72,14 @@ def main(opt):
         print("training")
 
         training_args = TrainingArguments(
-            output_dir=f'{opt["output_path"]}/vit1_{opt["label_type"]}',
+            output_dir=f'{opt["output_path"]}/vit1_{opt["label_type"]}_new_dataset',
             evaluation_strategy='epoch',
             per_device_train_batch_size=opt["batch_size"],
             per_device_eval_batch_size=opt["batch_size"],
             num_train_epochs=opt["num_epochs"],
             fp16=True,
             save_strategy='epoch',
-            logging_dir=f'{opt["output_path"]}/vit1_{opt["label_type"]}',
+            logging_dir=f'{opt["output_path"]}/vit1_{opt["label_type"]}_new_dataset',
             logging_steps=opt["print_every"],
             remove_unused_columns=False,
             load_best_model_at_end=True,
