@@ -104,7 +104,7 @@ class CustomDataset_Vit(Dataset):
         return inputs
 
 class CustomDataset_Bert_Vit(Dataset):
-    def __init__(self, dataframe, max_len, bert_tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, data_path):
+    def __init__(self, dataframe, max_len, bert_tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, data_path, dataset):
         self.data = dataframe
         self.bert_tokenizer = bert_tokenizer
         self.max_len = max_len
@@ -116,7 +116,7 @@ class CustomDataset_Bert_Vit(Dataset):
         self.label = dataframe["label"]
         self.img_id = dataframe["id"]
         self.data_path = data_path
-
+        self.dataset = dataset
     def __len__(self):
         return len(self.text)
 
@@ -153,8 +153,10 @@ class CustomDataset_Bert_Vit(Dataset):
         intent_ids = inputs['input_ids']
         intent_mask = inputs['attention_mask']
         # print(f'2-{inputs}')
-        # img_path = f'{self.data_path}/{self.img_id[index]}.jpg'
-        img_path = f'{self.data_path}/{self.img_id[index]}'
+        if self.dataset == 'fakeddit':
+            img_path = f'{self.data_path}/{self.img_id[index]}.jpg'
+        else:
+            img_path = f'{self.data_path}/{self.img_id[index]}'
         img = Image.open(img_path).convert("RGB")
         try:
             inputs = self.vit_processor(images=img, return_tensors="pt")
@@ -229,9 +231,9 @@ def read_file(data_path, filename, delimiter):
 
 
 def load_dataset(opt):
-    df_train = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_train.tsv', '\t')[:300]
-    df_val = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_validate.tsv', '\t')[:300]
-    df_test = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_test_public.tsv', '\t')[:800]
+    df_train = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_train.tsv', '\t')#[:300]
+    df_val = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_validate.tsv', '\t')#[:300]
+    df_test = read_file(f'{opt["data_path"]}/Fakeddit', 'multimodal_test_public.tsv', '\t')#[:800]
     if opt["label_type"] == "2_way":
         df_train = df_train[["clean_title", "id", "2_way_label"]]
         df_val = df_val[["clean_title", "id", "2_way_label"]]
@@ -287,8 +289,11 @@ def load_dataset2(opt):
     return df_train, df_val, df_val
 
 def build_dataloader(opt, processor=None):
-    df_train, df_val, df_test = load_dataset2(opt)
-    # df_train, df_val, df_test = load_dataset(opt)
+    if opt['dataset'] == 'fakeddit':
+        df_train, df_val, df_test = load_dataset(opt)
+    else:
+        df_train, df_val, df_test = load_dataset2(opt)
+
     # print(df_train.head())
     print(f'training set:{df_train.shape}')
     print(f'validation set:{df_val.shape}')
@@ -324,15 +329,16 @@ def build_dataloader(opt, processor=None):
         # train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit/public_image_set')
         # val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit/public_image_set')
         # test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce, vis_senti_proce, intent_proce, f'{opt["data_path"]}/Fakeddit/public_image_set')
-
+        if opt['dataset'] == 'fakeddit':
+            data_path = f'{opt["data_path"]}/Fakeddit/public_image_set'
+        else:
+            data_path = f'{opt["data_path"]}/dataset2/images'
         train_set = CustomDataset_Bert_Vit(df_train, opt['max_len'], tokenizer, vit_processor, text_senti_proce,
-                                           vis_senti_proce, intent_proce,
-                                           f'{opt["data_path"]}/dataset2/images')
+                                           vis_senti_proce, intent_proce, data_path, opt['dataset'])
         val_set = CustomDataset_Bert_Vit(df_val, opt['max_len'], tokenizer, vit_processor, text_senti_proce,
-                                         vis_senti_proce, intent_proce, f'{opt["data_path"]}/dataset2/images')
+                                         vis_senti_proce, intent_proce, data_path, opt['dataset'])
         test_set = CustomDataset_Bert_Vit(df_test, opt['max_len'], tokenizer, vit_processor, text_senti_proce,
-                                          vis_senti_proce, intent_proce,
-                                          f'{opt["data_path"]}/dataset2/images')
+                                          vis_senti_proce, intent_proce, data_path, opt['dataset'])
 
 
     elif opt["model"] == "albef":
@@ -392,11 +398,12 @@ def prepare_dataset(opt, processor):
 
 def transform_clip(example_batch, processor, opt):
     texts = [" ".join(x.split()) for x in example_batch["clean_title"]]
-
-    # images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
-    #           example_batch['id']]
-    images = [Image.open(f'{opt["data_path"]}/dataset2/images/{x}').convert("RGB") for x in
-              example_batch['id']]
+    if opt['dataset'] == 'fakeddit':
+        images = [Image.open(f'{opt["data_path"]}/Fakeddit/public_image_set/{x}.jpg').convert("RGB") for x in
+                  example_batch['id']]
+    else:
+        images = [Image.open(f'{opt["data_path"]}/dataset2/images/{x}').convert("RGB") for x in
+                  example_batch['id']]
     # image_type=[isinstance(img, PIL.Image.Image) for img in images]
     # print(example_batch['id'], image_type)
     inputs = processor(text=texts, images=images, return_tensors="pt", padding="max_length",

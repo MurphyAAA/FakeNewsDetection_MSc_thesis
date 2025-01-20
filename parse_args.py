@@ -33,6 +33,7 @@ def parse_arguments():
     parse.add_argument('--cpu', action='store_true', help='If set, the experiment will run on the CPU')
     parse.add_argument('--model', type=str, default="albef", choices=['bert', 'clip', 'clip_large', 'vit', 'vit_large', 'bert_vit', 'albef'])
     parse.add_argument('--label_type', type=str, default="6_way", choices=['2_way', '3_way', '6_way'])
+    parse.add_argument('--dataset', type=str, default="fakeddit", choices=['fakeddit', 'TI-CNN'])
 
     #Build options dict
     opt = vars(parse.parse_args())
