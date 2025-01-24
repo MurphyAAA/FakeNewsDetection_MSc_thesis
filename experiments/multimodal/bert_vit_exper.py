@@ -96,11 +96,12 @@ class Bert_VitExperiment:
             #_, t_text_embeds, t_img_embeds, _, _ = self.teacher_model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, labels)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
-            # txt_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_emo_embeds))
+            txt_emo_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_emo_embeds))
             vis_emo_loss = torch.mean(1 - self.cosine_similarity(img_embeds, vis_emo_embeds))
             txt_intent_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_intent_embeds))
             # L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss + self.w[3] * txt_intent_loss
-            L = self.w[0] * loss + self.w[2] * vis_emo_loss + self.w[3] * txt_intent_loss
+            # 计算一个text-embedding和img-embedding的余弦相似度加到loss里，
+            L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[3] * txt_intent_loss
             self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             tot_loss += L.item()
             print_loss += L.item()

@@ -119,7 +119,7 @@ class Bert_VitClass(torch.nn.Module):
         last_hidden_states = hidden_states[-1]
         txt_intent_embeds = last_hidden_states[:, 0, :]  # cls token
 
-        # 计算 文字图片embedding的cross attention
+        # 计算 文字图片embedding的cross attention 这里拼接之前乘一个可以学习的weight
         combined_output = torch.cat((text_embeds, img_embeds), dim=1) # 试一下不直接将emotion的embedding拼起来，直接让模型返回text_embed和emo_embed，计算L2loss，让原本的模型得到的text_embed能更好的提取情绪信息 (embedding distillation)
         # fused_embed = self.multimodal_block(text_embeds, img_embeds)
         output = self.category_classifier(combined_output)
