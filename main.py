@@ -116,9 +116,9 @@ def main(opt):
             epoch_time, loss = experiment.train(epoch, tot_loss)
             tot_loss = loss
             print(tot_loss)
-            experiment.save_checkpoint(
-                f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
-            print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+            # experiment.save_checkpoint(
+            #     f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+            # print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         experiment.writer.close()
         # validation
         predicts, labels = experiment.validation()
