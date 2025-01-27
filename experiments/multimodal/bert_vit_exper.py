@@ -101,7 +101,7 @@ class Bert_VitExperiment:
             txt_intent_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_intent_embeds))
             # L = self.w[0] * loss + self.w[1] * txt_emo_loss + self.w[2] * vis_emo_loss + self.w[3] * txt_intent_loss
             # 计算一个text-embedding和img-embedding的余弦相似度加到loss里，
-            L = self.w[0] * loss + txt_intent_loss
+            L = self.w[0] * loss + self.w[1] * txt_emo_loss
             self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             tot_loss += L.item()
             print_loss += L.item()
