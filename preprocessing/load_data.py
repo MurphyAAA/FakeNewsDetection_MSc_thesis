@@ -406,9 +406,8 @@ def transform_clip(example_batch, processor, opt):
                   example_batch['id']]
     # image_type=[isinstance(img, PIL.Image.Image) for img in images]
     # print(example_batch['id'], image_type)
-    inputs = processor(text=texts, images=images, return_tensors="pt", padding="max_length",
-                                     truncation=True)
-
+    # inputs = processor(text=texts, images=images, return_tensors="pt", padding="max_length", truncation=True)
+    inputs = processor(text=texts, return_tensors="pt", padding="max_length", truncation=True)
     inputs["label"]=example_batch['label']
     return inputs
     # return {
