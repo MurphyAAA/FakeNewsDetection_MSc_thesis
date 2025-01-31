@@ -39,7 +39,7 @@ class ClipClass(torch.nn.Module):
 
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
-    def forward(self, ids, mask, pixel_values=None):
+    def forward(self, ids=None, mask=None, pixel_values=None):
         # text+image
         # output_1 = self.model(input_ids=ids, attention_mask=mask, pixel_values=pixel_values, output_hidden_states=True)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
         # text_embeds, img_embeds = output_1.text_embeds, output_1.image_embeds
