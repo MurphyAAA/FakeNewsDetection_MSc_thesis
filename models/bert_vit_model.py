@@ -40,37 +40,98 @@ class VisualSentimentModel(torch.nn.Module):
         return x,vis_emo_embeds
 
 class MultimodalFusionBlock(torch.nn.Module):
-    def __init__(self, embed_dim, num_heads, dropout=0.1):
+    def __init__(self, embed_dim=768, num_heads=8, dropout=0.1):
         super(MultimodalFusionBlock, self).__init__()
-        # Self-Attention
-        self.self_attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
-        self.self_attn_layer_norm = nn.LayerNorm(embed_dim)
+        # # Self-Attention
+        # self.self_attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
+        # self.self_attn_layer_norm = nn.LayerNorm(embed_dim)
+        #
+        # # Cross-Attention
+        # self.cross_attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
+        # self.cross_attn_layer_norm = nn.LayerNorm(embed_dim)
+        #
+        # # Feed Forward
+        # self.feed_forward = nn.Sequential(
+        #     nn.Linear(embed_dim, embed_dim),
+        #     nn.ReLU(),
+        #     nn.Dropout(dropout),
+        # )
+        # self.ffn_layer_norm = nn.LayerNorm(embed_dim)
 
-        # Cross-Attention
-        self.cross_attention = nn.MultiheadAttention(embed_dim, num_heads, dropout=dropout)
-        self.cross_attn_layer_norm = nn.LayerNorm(embed_dim)
+        # 跨模态注意力层
+        self.cross_attn = nn.ModuleList([
+            CrossModalAttentionBlock(embed_dim, num_heads, dropout)
+            for _ in range(2)
+        ])
 
-        # Feed Forward
-        self.feed_forward = nn.Sequential(
-            nn.Linear(embed_dim, embed_dim),
-            nn.ReLU(),
-            nn.Dropout(dropout),
+        # 自适应门控
+        self.gate = nn.Sequential(
+            nn.Linear(2 * embed_dim, embed_dim),
+            nn.Sigmoid()
         )
-        self.ffn_layer_norm = nn.LayerNorm(embed_dim)
     def forward(self, text_embeds, image_embeds):
-        # Self-Attention: Intra-text dependencies
-        # text_self, _ = self.self_attention(text_embeds, text_embeds, text_embeds)
-        # text_embeds = self.self_attn_layer_norm(text_embeds + text_self)  # 残差连接 归一化
-        # Cross-Attention: Text as Query, Image as Key/Value
-        text_with_image, _ = self.cross_attention(text_embeds, image_embeds, image_embeds)
-        fused_embeds = self.cross_attn_layer_norm(text_embeds + text_with_image)
+        # 双向交叉注意力
+        for attn_layer in self.cross_attn:
+            text, img = attn_layer(text_embeds, image_embeds)
 
-        # Feed Forward Network
-        fused_embeds = self.feed_forward(fused_embeds)
-        # fused_embeds = self.ffn_layer_norm(fused_embeds + text_ffn)
+        # 特征聚合
+        text_pool = text.mean(dim=1)  # [B, 768]
+        img_pool = img.mean(dim=1)  # [B, 768]
 
-        return fused_embeds
-        
+        # 动态门控融合
+        gate = self.gate(torch.cat([text_pool, img_pool], dim=1))
+        fused = gate * text_pool + (1 - gate) * img_pool
+        # fused = fused + self.ffn(fused)
+        return fused
+
+
+class CrossModalAttentionBlock(nn.Module):
+    def __init__(self, embed_dim, num_heads, dropout=0.1):
+        super().__init__()
+        # 文本到图像注意力
+        self.txt2img_attn = nn.MultiheadAttention(embed_dim, num_heads)
+        # 图像到文本注意力
+        self.img2txt_attn = nn.MultiheadAttention(embed_dim, num_heads)
+
+        self.ffn = nn.Sequential(
+            nn.Linear(embed_dim, 4 * embed_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(4 * embed_dim, embed_dim)
+        )
+        # 层归一化
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.norm3 = nn.LayerNorm(embed_dim)
+        self.norm4 = nn.LayerNorm(embed_dim)
+
+
+
+    def forward(self, text, img):
+        # 维度转换 (B, S, D) -> (S, B, D)
+        text_in = text.permute(1, 0, 2)
+        img_in = img.permute(1, 0, 2)
+
+        # 文本关注图像
+        text_attn_out, _ = self.txt2img_attn(
+            query=text_in,
+            key=img_in,
+            value=img_in
+        )
+        text = self.norm1(text + text_attn_out.permute(1, 0, 2))
+
+        # 图像关注文本
+        img_attn_out, _ = self.img2txt_attn(
+            query=img_in,
+            key=text_in,
+            value=text_in
+        )
+        img = self.norm2(img + img_attn_out.permute(1, 0, 2))
+
+        text = self.norm3(text + self.ffn_text(text)) # 模态内的非线性变换
+        img = self.norm4(img + self.ffn_img(img))
+        return text, img
+
 class Bert_VitClass(torch.nn.Module):
     def __init__(self, opt):
         super(Bert_VitClass, self).__init__()
@@ -97,15 +158,18 @@ class Bert_VitClass(torch.nn.Module):
         self.emotion_layer = torch.nn.Linear(768, 384)
 
         if opt["label_type"] == "2_way":
-            self.category_classifier = torch.nn.Linear(768+768, 2)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768, 2)  # Bert base 的H是768
         elif opt["label_type"] == "3_way":
-            self.category_classifier = torch.nn.Linear(768+768, 3)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768, 3)  # Bert base 的H是768
         else:  # 6_way
-            self.category_classifier = torch.nn.Linear(768+768, 6)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768, 6)  # Bert base 的H是768
 
     def forward(self, ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, intent_ids, intent_mask, labels):
-        _, text_embeds = self.text_encoder(ids, attention_mask=mask, token_type_ids=token_type_ids, return_dict=False) # 16*768
-        _, img_embeds = self.img_encoder(pixel_values=pixel_values, return_dict=False) # 16*768
+        text_outputs = self.text_encoder(ids, attention_mask=mask, token_type_ids=token_type_ids) # 16*768
+        img_outputs = self.img_encoder(pixel_values=pixel_values) # 16*768
+        text_lhs = text_outputs.last_hidden_state  # [batch, text_seq_len=100, 768]
+        img_lsh = img_outputs.last_hidden_state  # [batch, img_seq_len=197, 768]
+
         # _, emo_embeds = self.sentiment_model1(input_ids=emo_ids, attention_mask=emo_mask, return_dict=False)
         txt_emo_output = self.text_sentiment(input_ids=emo_ids, attention_mask=emo_mask, output_hidden_states=True) # 13* 16*100*768
         _, vis_emo_embeds = self.visual_sentiment(pixel_values=pixel_values_emo)  # 之后试一下用pixel_values
@@ -120,8 +184,11 @@ class Bert_VitClass(torch.nn.Module):
         txt_intent_embeds = last_hidden_states[:, 0, :]  # cls token
 
         # 计算 文字图片embedding的cross attention 这里拼接之前乘一个可以学习的weight
-        combined_output = torch.cat((text_embeds, img_embeds), dim=1) # 试一下不直接将emotion的embedding拼起来，直接让模型返回text_embed和emo_embed，计算L2loss，让原本的模型得到的text_embed能更好的提取情绪信息 (embedding distillation)
-        # fused_embed = self.multimodal_block(text_embeds, img_embeds)
-        output = self.category_classifier(combined_output)
+        text_embeds, img_embeds = text_lhs[:,0,:], img_lsh[:,0,:]
+        # combined_output = torch.cat((text_embeds, img_embeds), dim=1) # 试一下不直接将emotion的embedding拼起来，直接让模型返回text_embed和emo_embed，计算L2loss，让原本的模型得到的text_embed能更好的提取情绪信息 (embedding distillation)
+        text_embeds2 = text_lhs
+        img_embeds2 = img_lsh[:, 1:, :]
+        fused_embed = self.multimodal_block(text_embeds2, img_embeds2)
+        output = self.category_classifier(fused_embed)
         return output, text_embeds, img_embeds, txt_emo_embeds, vis_emo_embeds, txt_intent_embeds
 
