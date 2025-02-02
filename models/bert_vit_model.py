@@ -128,8 +128,8 @@ class CrossModalAttentionBlock(nn.Module):
         )
         img = self.norm2(img + img_attn_out.permute(1, 0, 2))
 
-        text = self.norm3(text + self.ffn_text(text)) # 模态内的非线性变换
-        img = self.norm4(img + self.ffn_img(img))
+        text = self.norm3(text + self.ffn(text)) # 模态内的非线性变换
+        img = self.norm4(img + self.ffn(img))
         return text, img
 
 class Bert_VitClass(torch.nn.Module):
