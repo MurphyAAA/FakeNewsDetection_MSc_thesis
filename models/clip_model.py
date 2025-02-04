@@ -31,29 +31,29 @@ class ClipClass(torch.nn.Module):
         self.l3 = torch.nn.Dropout(0.2)
         # self.l4 = torch.nn.Linear(128, 2)
         if opt["label_type"] == "2_way":
-            self.l4 = torch.nn.Linear(512, 2) # 只有text。没有image 所以临时改成512
+            self.l4 = torch.nn.Linear(1024, 2) # 只有text。没有image 所以临时改成512
         elif opt["label_type"] == "3_way":
-            self.l4 = torch.nn.Linear(512, 3)
+            self.l4 = torch.nn.Linear(1024, 3)
         else:  # 6_way
-            self.l4 = torch.nn.Linear(512, 6)
+            self.l4 = torch.nn.Linear(1024, 6)
 
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
     def forward(self, ids=None, mask=None, pixel_values=None):
         # text+image
-        # output_1 = self.model(input_ids=ids, attention_mask=mask, pixel_values=pixel_values, output_hidden_states=True)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
-        # text_embeds, img_embeds = output_1.text_embeds, output_1.image_embeds
+        output_1 = self.model(input_ids=ids, attention_mask=mask, pixel_values=pixel_values, output_hidden_states=True)  # 本任务更关注text和img的关系，而不是根据一个分类另一个
+        text_embeds, img_embeds = output_1.text_embeds, output_1.image_embeds
         # clip text only
         # text_embeds = self.model.get_text_features(input_ids=ids, attention_mask=mask, output_hidden_states=True)
         # text_embeds = text_embeds / text_embeds.norm(p=2, dim=-1, keepdim=True)
         #clip image only
-        img_embeds = self.model.get_image_features(pixel_values=pixel_values, output_hidden_states=True)
+        # img_embeds = self.model.get_image_features(pixel_values=pixel_values, output_hidden_states=True)
         # print(f"------------------------------------------image embed:{img_embeds}, text embed:{text_embeds}") # 检查loss、变成nan的时候embedding是不是过大
         # output_2_img = self.l2(img_embeds)
         # output_2_text = self.l2(text_embeds)
         # combined_output = torch.cat((output_2_text, output_2_img), dim=1)
-        # combined_output = torch.cat((text_embeds, img_embeds), dim=1)  # ********** 组合方式也可以调整
+        combined_output = torch.cat((text_embeds, img_embeds), dim=1)  # ********** 组合方式也可以调整
         # output_3 = self.l3(combined_output)
-        output_3 = self.l3(img_embeds) # 先只看text embedding 为啥是nan了
-        output = self.l4(output_3)
+        # output_3 = self.l3(img_embeds) # 先只看text embedding 为啥是nan了
+        output = self.l4(combined_output)
         return output
