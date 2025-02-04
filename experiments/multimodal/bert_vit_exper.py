@@ -96,18 +96,7 @@ class Bert_VitExperiment:
             intent_mask = databatch["intent_mask"].to(self.device, dtype=torch.long)
             logits, text_embeds, img_embeds, txt_emo_embeds, vis_emo_embeds, txt_intent_embeds = self.model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, intent_ids, intent_mask, labels)
             if self.flg == False:
-                dummy_inputs = {
-                    "ids": ids,
-                    "mask": mask,
-                    "token_type_ids": token_type_ids,
-                    "pixel_values": pixel_values,
-                    "pixel_values_emo": pixel_values_emo,
-                    "emo_ids": emo_ids,
-                    "emo_mask": emo_mask,
-                    "intent_ids": intent_ids,
-                    "intent_mask": intent_mask,
-                    "labels": labels
-                }
+                dummy_inputs = (ids,mask,token_type_ids,pixel_values,pixel_values_emo,emo_ids,emo_mask,intent_ids,intent_mask,labels)
                 self.writer2.add_graph(self.model, dummy_inputs)
                 self.writer2.close()
                 self.flg = True
