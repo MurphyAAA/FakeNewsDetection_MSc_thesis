@@ -17,6 +17,7 @@ class Bert_VitExperiment:
     def __init__(self, opt):
         self.opt = opt
         self.writer = SummaryWriter(opt['log_dir']+opt['model'])
+        self.writer2 = SummaryWriter(opt['log_dir']+opt['model']+'/model')
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = Bert_VitClass(opt)
         modified_opt = opt.copy()  # 创建 opt 的副本
@@ -36,6 +37,7 @@ class Bert_VitExperiment:
         self.mse_loss = torch.nn.MSELoss() # L2 loss
         self.cosine_similarity = torch.nn.CosineSimilarity(dim=1, eps=opt['eps'])
         self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'])
+        self.flg = False
         # self.optimizer = torch.optim.AdamW([
         #     {'params': self.model.bertmodel.parameters(), 'lr': 5e-5},  # 对BERT部分使用较小的学习率
         #     {'params': self.model.vitmodel.parameters(), 'lr': 5e-4},  # 对ViT部分使用稍大的学习率
@@ -93,6 +95,23 @@ class Bert_VitExperiment:
             intent_ids = databatch["intent_ids"].to(self.device, dtype=torch.long)
             intent_mask = databatch["intent_mask"].to(self.device, dtype=torch.long)
             logits, text_embeds, img_embeds, txt_emo_embeds, vis_emo_embeds, txt_intent_embeds = self.model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, intent_ids, intent_mask, labels)
+            if self.flg == False:
+                dummy_inputs = {
+                    "ids": ids,
+                    "mask": mask,
+                    "token_type_ids": token_type_ids,
+                    "pixel_values": pixel_values,
+                    "pixel_values_emo": pixel_values_emo,
+                    "emo_ids": emo_ids,
+                    "emo_mask": emo_mask,
+                    "intent_ids": intent_ids,
+                    "intent_mask": intent_mask,
+                    "labels": labels
+                }
+                self.writer2.add_graph(self.model, dummy_inputs)
+                self.writer2.close()
+                self.flg = True
+
             #_, t_text_embeds, t_img_embeds, _, _ = self.teacher_model(ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, labels)
             self.optimizer.zero_grad()
             loss = self.ent_loss(logits, labels)
