@@ -104,7 +104,15 @@ class Bert_VitExperiment:
             # L = self.w[0] * loss + self.w[2] * txt_emo_loss + self.w[3] * vis_emo_loss + self.w[4] * txt_intent_loss
             # 计算一个text-embedding和img-embedding的余弦相似度加到loss里，
             # L = self.w[0] * loss + self.w[1] * txt_emo_loss
-            self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
+            # self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
+            if epoch*len(self.train_loader) + idx % self.opt["log_every"] == 0:
+                self.writer.add_scalar(f"{self.opt['label_type']}_text_emo_loss", txt_emo_loss.item(), epoch*len(self.train_loader) + idx)
+                self.writer.add_scalar(f"{self.opt['label_type']}_vis_emo_loss", vis_emo_loss.item(), epoch*len(self.train_loader) + idx)
+                self.writer.add_scalar(f"{self.opt['label_type']}_txt_intent_loss", txt_intent_loss.item(), epoch*len(self.train_loader) + idx)
+                self.writer.add_scalar(f"{self.opt['label_type']}_feature_alignment_loss", feature_alignment_loss.item(), epoch*len(self.train_loader) + idx)
+                self.writer.add_scalar(f"{self.opt['label_type']}_tot_loss", L.item(), epoch*len(self.train_loader) + idx)
+
+
             tot_loss += L.item()
             print_loss += L.item()
             self.optimizer.zero_grad()

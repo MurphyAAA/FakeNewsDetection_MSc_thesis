@@ -22,6 +22,7 @@ def parse_arguments():
     parse.add_argument('--max_len', type=int, default=100) # 文本的最大长度
     parse.add_argument('--print_every', type=int, default=50)
     parse.add_argument('--val_every', type=int, default=150)
+    parse.add_argument('--log_every', type=int, default=50)
 
     parse.add_argument('--output_path', type=str, default='result',
                         help='Where to create the output directory containing logs and weights.')

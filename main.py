@@ -44,10 +44,10 @@ def main(opt):
         # validation
         predicts, labels = experiment.validate()
         if opt["label_type"] == "2_way":
-            evaluation(labels, predicts, True)
+            result = evaluation(labels, predicts, True)
         else:  # 3/6_way
-            evaluation(labels, predicts, False)
-
+            result = evaluation(labels, predicts, False)
+        print_results(result)
     elif opt["model"] == "clip" or opt["model"] == "clip_large":  # clip/ clip_large
         experiment = ClipExperiment(opt)
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, processor=experiment.processor)
@@ -64,9 +64,10 @@ def main(opt):
         # validation
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
-            evaluation(labels, predicts, True)
+            result = evaluation(labels, predicts, True)
         else:  # 3/6_way
-            evaluation(labels, predicts, False)
+            result = evaluation(labels, predicts, False)
+        print_results(result)
     elif opt["model"] == "vit" or opt["model"] == "vit_large":
         experiment = VitExperiment(opt)
         print("training")
@@ -119,13 +120,19 @@ def main(opt):
             # experiment.save_checkpoint(
             #     f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
             # print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
-        experiment.writer.close()
         # validation
-        predicts, labels = experiment.validation()
-        if opt["label_type"] == "2_way":
-            evaluation(labels, predicts, True)
-        else:  # 3/6_way
-            evaluation(labels, predicts, False)
+            predicts, labels = experiment.validation()
+            if opt["label_type"] == "2_way":
+                result = evaluation(labels, predicts, True)
+            else:  # 3/6_way
+                result = evaluation(labels, predicts, False)
+            # log
+            experiment.writer.add_scalar("result_acc", result['acc'], epoch)
+            experiment.writer.add_scalar("result_precision", result['precision_macro'], epoch)
+            experiment.writer.add_scalar("result_recall", result['recall_macro'], epoch)
+            experiment.writer.add_scalar("result_f1", result['f1_macro'], epoch)
+        print_results(result)
+        experiment.writer.close()
     elif opt["model"] == "albef":
         experiment = AlbefExperiment(opt)
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, (experiment.text_processor, experiment.img_processor))
@@ -143,9 +150,11 @@ def main(opt):
         # validation
         predicts, labels = experiment.validation()
         if opt["label_type"] == "2_way":
-            evaluation(labels, predicts, True)
+            result = evaluation(labels, predicts, True)
         else:  # 3/6_way
-            evaluation(labels, predicts, False)
+            result = evaluation(labels, predicts, False)
+        print_results(result)
+
 def compute_metrics(eval_pred):
     labels = eval_pred.label_ids
     preds = eval_pred.predictions.argmax(-1)
@@ -211,7 +220,25 @@ def evaluation(labels, predicts, two_way):
         f1_macro = metrics.f1_score(labels, predicts, average="macro", labels=np.unique(predicts))
         conf_matrix = metrics.confusion_matrix(labels, predicts)
         FPR = np.sum(conf_matrix[1:, 0]) / np.sum(conf_matrix[1:, :])
+    return {
+        'acc':acc,
+        'precision':precision, 'precision_macro':precision_macro,
+        'recall':recall, 'recall_macro':recall_macro,
+        'f1':f1, 'f1_macro':f1_macro,
+        'conf_matrix':conf_matrix,
+        'FPR':FPR,
+    }
 
+def print_results(result):
+    acc = result['acc']
+    precision = result['precision']
+    precision_macro = result['precision_macro']
+    recall = result['recall']
+    recall_macro = result['recall_macro']
+    f1 = result['f1']
+    f1_macro = result['f1_macro']
+    conf_matrix = result['conf_matrix']
+    FPR = result['FPR']
     print("—————————— RESULT ——————————")
     print(f'**acc** :       【{acc * 100:.2f}%】')
     print(f'**precision** : 【{precision}】------- **precision-Macro** : 【{precision_macro}】')
@@ -219,10 +246,9 @@ def evaluation(labels, predicts, two_way):
     print(f'**f1** :        【{f1}】------- **f1-Macro** : 【{f1_macro}】')
     print(f'**conf_matrix**:\n【{conf_matrix}】')
     print(f'**FPR** :       【{FPR}】')
-    if two_way:
-        print(f'**FPR** :       【{FPR}】')
-        print(f'**TPR** :       【{TPR}】')
-        print(f'**ROC_auc** :   【{roc_auc}】')
+    # if two_way:
+    #     print(f'**TPR** :       【{TPR}】')
+    #     print(f'**ROC_auc** :   【{roc_auc}】')
 
 
 
