@@ -127,12 +127,12 @@ def main(opt):
             else:  # 3/6_way
                 result = evaluation(labels, predicts, False)
             # log
-            experiment.writer.add_scalar("result_acc", result['acc'], epoch)
-            experiment.writer.add_scalar("result_precision", result['precision_macro'], epoch)
-            experiment.writer.add_scalar("result_recall", result['recall_macro'], epoch)
-            experiment.writer.add_scalar("result_f1", result['f1_macro'], epoch)
+            # experiment.writer.add_scalar("result_acc", result['acc'], epoch)
+            # experiment.writer.add_scalar("result_precision", result['precision_macro'], epoch)
+            # experiment.writer.add_scalar("result_recall", result['recall_macro'], epoch)
+            # experiment.writer.add_scalar("result_f1", result['f1_macro'], epoch)
         print_results(result)
-        experiment.writer.close()
+        # experiment.writer.close()
     elif opt["model"] == "albef":
         experiment = AlbefExperiment(opt)
         train_loader, val_loader, test_loader, train_class_weights = build_dataloader(opt, (experiment.text_processor, experiment.img_processor))

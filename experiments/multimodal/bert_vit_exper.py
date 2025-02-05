@@ -16,7 +16,7 @@ from scipy.special import softmax
 class Bert_VitExperiment:
     def __init__(self, opt):
         self.opt = opt
-        self.writer = SummaryWriter(opt['log_dir']+opt['model'])
+        # self.writer = SummaryWriter(opt['log_dir']+opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = Bert_VitClass(opt)
         modified_opt = opt.copy()  # 创建 opt 的副本
@@ -105,12 +105,12 @@ class Bert_VitExperiment:
             # 计算一个text-embedding和img-embedding的余弦相似度加到loss里，
             # L = self.w[0] * loss + self.w[1] * txt_emo_loss
             # self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
-            if epoch*len(self.train_loader) + idx % self.opt["log_every"] == 0:
-                self.writer.add_scalar(f"{self.opt['label_type']}_text_emo_loss", txt_emo_loss.item(), epoch*len(self.train_loader) + idx)
-                self.writer.add_scalar(f"{self.opt['label_type']}_vis_emo_loss", vis_emo_loss.item(), epoch*len(self.train_loader) + idx)
-                self.writer.add_scalar(f"{self.opt['label_type']}_txt_intent_loss", txt_intent_loss.item(), epoch*len(self.train_loader) + idx)
-                self.writer.add_scalar(f"{self.opt['label_type']}_feature_alignment_loss", feature_alignment_loss.item(), epoch*len(self.train_loader) + idx)
-                self.writer.add_scalar(f"{self.opt['label_type']}_tot_loss", L.item(), epoch*len(self.train_loader) + idx)
+            # if epoch*len(self.train_loader) + idx % self.opt["log_every"] == 0:
+            #     self.writer.add_scalar(f"{self.opt['label_type']}_text_emo_loss", txt_emo_loss.item(), epoch*len(self.train_loader) + idx)
+            #     self.writer.add_scalar(f"{self.opt['label_type']}_vis_emo_loss", vis_emo_loss.item(), epoch*len(self.train_loader) + idx)
+            #     self.writer.add_scalar(f"{self.opt['label_type']}_txt_intent_loss", txt_intent_loss.item(), epoch*len(self.train_loader) + idx)
+            #     self.writer.add_scalar(f"{self.opt['label_type']}_feature_alignment_loss", feature_alignment_loss.item(), epoch*len(self.train_loader) + idx)
+            #     self.writer.add_scalar(f"{self.opt['label_type']}_tot_loss", L.item(), epoch*len(self.train_loader) + idx)
 
 
             tot_loss += L.item()
