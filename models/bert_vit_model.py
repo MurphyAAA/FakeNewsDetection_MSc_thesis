@@ -253,7 +253,7 @@ class Bert_VitClass(torch.nn.Module):
         _, vis_emo_embeds = self.visual_sentiment(pixel_values=pixel_values_emo)  # 之后试一下用pixel_values
         # vis_emo_output = self.visual_sentiment(pixel_values=pixel_values, output_hidden_states=True) # 之后试一下用pixel_values
         # txt_intent_output = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask, output_hidden_states=True)
-        _, txt_intent_embeds = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask, output_hidden_states=True)
+        _, txt_intent_embeds = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask)
 
         hidden_states = txt_emo_output['hidden_states']  # 16*100*768
         last_hidden_states = hidden_states[-1]
