@@ -39,6 +39,35 @@ class VisualSentimentModel(torch.nn.Module):
         x = self.classifier(vis_emo_embeds)
         return x,vis_emo_embeds
 
+# Model
+class IntentModel(nn.Module):
+    def __init__(self):
+        super(IntentModel, self).__init__()
+        self.intent_model = AutoModelForSequenceClassification.from_pretrained("roberta-base")
+        self.category_encoder = torch.nn.Sequential(
+            torch.nn.Linear(768, 768),
+            torch.nn.BatchNorm1d(768),
+            torch.nn.ReLU(),
+
+            torch.nn.Linear(768, 768),
+            torch.nn.BatchNorm1d(768),
+            torch.nn.ReLU(),
+
+            torch.nn.Linear(768, 768),
+            torch.nn.BatchNorm1d(768),
+            torch.nn.ReLU()
+        )
+        self.classifier = torch.nn.Linear(768, 150) # fc
+    def forward(self, input_ids, attention_mask):
+        output = self.intent_model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+        # print(output.keys())
+        last_hidden_states = output['hidden_states'][-1]
+        intent_embeds = last_hidden_states[:, 0, :]
+        intent_embeds = self.category_encoder(intent_embeds)
+        x=self.classifier(intent_embeds)
+        return x, intent_embeds
+
+
 class MultimodalFusionBlock(torch.nn.Module):
     def __init__(self, embed_dim=768, num_heads=8, dropout=0.1):
         super(MultimodalFusionBlock, self).__init__()
@@ -141,7 +170,7 @@ class Bert_VitClass(torch.nn.Module):
         # self.visual_sentiment= AutoModelForImageClassification.from_pretrained("kittendev/visual_emotional_analysis")
         self.visual_sentiment = VisualSentimentModel()
         # self.intent_detector = AutoModelForSequenceClassification.from_pretrained("bespin-global/klue-roberta-small-3i4k-intent-classification" )
-        self.intent_detector = AutoModelForSequenceClassification.from_pretrained("Falconsai/intent_classification" )
+        self.intent_detector = IntentModel()
         self.multimodal_block = MultimodalFusionBlock(embed_dim=768, num_heads=opt['num_heads'])  # text-embedding.shape[1]
         self.processors = {
             'bert': BertTokenizer.from_pretrained('bert-base-uncased'),
@@ -150,9 +179,11 @@ class Bert_VitClass(torch.nn.Module):
             'visual_sentiment': AutoImageProcessor.from_pretrained("kittendev/visual_emotional_analysis"),
             'intent_detector': AutoTokenizer.from_pretrained("Falconsai/intent_classification" )
         }
-        fileName = f'{opt["output_path"]}/checkpoint_SA_model.pth'
-        checkpoint = torch.load(fileName)
+        visual_sa_model = f'{opt["output_path"]}/checkpoint_SA_model.pth'
+        text_intent_model = f'{opt["output_path"]}/checkpoint_intent_model.pth'
+        checkpoint = torch.load(visual_sa_model)
         self.visual_sentiment.load_state_dict(checkpoint['model'])
+        self.intent_detector.load_state_dict(checkpoint['model'])
         # print(self.visual_sentiment)
 
         # self.dropout = torch.nn.Dropout(0.3)
@@ -217,14 +248,13 @@ class Bert_VitClass(torch.nn.Module):
         txt_emo_output = self.text_sentiment(input_ids=emo_ids, attention_mask=emo_mask, output_hidden_states=True) # 13* 16*100*768
         _, vis_emo_embeds = self.visual_sentiment(pixel_values=pixel_values_emo)  # 之后试一下用pixel_values
         # vis_emo_output = self.visual_sentiment(pixel_values=pixel_values, output_hidden_states=True) # 之后试一下用pixel_values
-        txt_intent_output = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask, output_hidden_states=True)
+        # txt_intent_output = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask, output_hidden_states=True)
+        _, txt_intent_embeds = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask, output_hidden_states=True)
+
         hidden_states = txt_emo_output['hidden_states']  # 16*100*768
         last_hidden_states = hidden_states[-1]
         txt_emo_embeds = last_hidden_states[:, 0, :] # cls token
 
-        hidden_states = txt_intent_output['hidden_states']  # 16*100*768
-        last_hidden_states = hidden_states[-1]
-        txt_intent_embeds = last_hidden_states[:, 0, :]  # cls token
 
         # 计算 文字图片embedding的cross attention 这里拼接之前乘一个可以学习的weight
         text_embeds, img_embeds = text_lhs[:,0,:], img_lsh[:,0,:]
