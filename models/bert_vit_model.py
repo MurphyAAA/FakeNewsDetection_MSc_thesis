@@ -183,6 +183,7 @@ class Bert_VitClass(torch.nn.Module):
         text_intent_model = f'{opt["output_path"]}/checkpoint_intent_model.pth'
         checkpoint = torch.load(visual_sa_model)
         self.visual_sentiment.load_state_dict(checkpoint['model'])
+        checkpoint = torch.load(text_intent_model)
         self.intent_detector.load_state_dict(checkpoint['model'])
         # print(self.visual_sentiment)
 
