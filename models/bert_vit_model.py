@@ -43,7 +43,7 @@ class VisualSentimentModel(torch.nn.Module):
 class IntentModel(nn.Module):
     def __init__(self):
         super(IntentModel, self).__init__()
-        self.intent_model = AutoModelForSequenceClassification.from_pretrained("roberta-base")
+        self.intent_model = AutoModelForSequenceClassification.from_pretrained("roberta-base",num_labels=150)
         self.category_encoder = torch.nn.Sequential(
             torch.nn.Linear(768, 768),
             torch.nn.BatchNorm1d(768),
