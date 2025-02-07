@@ -140,14 +140,15 @@ class Bert_VitClass(torch.nn.Module):
         self.text_sentiment= AutoModelForSequenceClassification.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
         # self.visual_sentiment= AutoModelForImageClassification.from_pretrained("kittendev/visual_emotional_analysis")
         self.visual_sentiment = VisualSentimentModel()
-        self.intent_detector = AutoModelForSequenceClassification.from_pretrained("bespin-global/klue-roberta-small-3i4k-intent-classification" )
+        # self.intent_detector = AutoModelForSequenceClassification.from_pretrained("bespin-global/klue-roberta-small-3i4k-intent-classification" )
+        self.intent_detector = AutoModelForSequenceClassification.from_pretrained("Falconsai/intent_classification" )
         self.multimodal_block = MultimodalFusionBlock(embed_dim=768, num_heads=opt['num_heads'])  # text-embedding.shape[1]
         self.processors = {
             'bert': BertTokenizer.from_pretrained('bert-base-uncased'),
             'vit': ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k'),
             'text_sentiment': AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest"),
             'visual_sentiment': AutoImageProcessor.from_pretrained("kittendev/visual_emotional_analysis"),
-            'intent_detector': AutoTokenizer.from_pretrained("bespin-global/klue-roberta-small-3i4k-intent-classification" )
+            'intent_detector': AutoTokenizer.from_pretrained("Falconsai/intent_classification" )
         }
         fileName = f'{opt["output_path"]}/checkpoint_SA_model.pth'
         checkpoint = torch.load(fileName)

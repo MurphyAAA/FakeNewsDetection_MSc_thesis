@@ -16,7 +16,7 @@ from scipy.special import softmax
 class Bert_VitExperiment:
     def __init__(self, opt):
         self.opt = opt
-        self.writer = SummaryWriter(opt['log_dir']+opt['model']+'2')
+        self.writer = SummaryWriter(opt['log_dir']+opt['model'])
         self.device = torch.device('cpu' if opt["cpu"] else 'cuda:0')
         self.model = Bert_VitClass(opt)
         modified_opt = opt.copy()  # 创建 opt 的副本

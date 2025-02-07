@@ -127,10 +127,12 @@ def main(opt):
             else:  # 3/6_way
                 result = evaluation(labels, predicts, False)
             # log
-            experiment.writer.add_scalar(f"{opt['label_type']}_result_acc", result['acc'], epoch)
-            experiment.writer.add_scalar(f"{opt['label_type']}_result_precision", result['precision_macro'], epoch)
-            experiment.writer.add_scalar(f"{opt['label_type']}_result_recall", result['recall_macro'], epoch)
-            experiment.writer.add_scalar(f"{opt['label_type']}_result_f1", result['f1_macro'], epoch)
+            base = 0.8
+            scale = 100
+            experiment.writer.add_scalar(f"{opt['label_type']}_result_acc", (result['acc']-base)*scale, epoch)
+            experiment.writer.add_scalar(f"{opt['label_type']}_result_precision", (result['precision_macro'])*scale, epoch)
+            experiment.writer.add_scalar(f"{opt['label_type']}_result_recall", (result['recall_macro'])*scale, epoch)
+            experiment.writer.add_scalar(f"{opt['label_type']}_result_f1", (result['f1_macro'])*scale, epoch)
         print_results(result)
         experiment.writer.close()
     elif opt["model"] == "albef":
