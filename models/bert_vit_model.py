@@ -158,53 +158,53 @@ class Bert_VitClass(torch.nn.Module):
         self.emotion_layer = torch.nn.Linear(768, 384)
 
         if opt["label_type"] == "2_way":
-            # self.category_classifier = torch.nn.Linear(768, 2)  # Bert base 的H是768
-            self.category_classifier = nn.Sequential(
-                # Layer 1: 768 → 512
-                nn.Linear(768, 512),
-                nn.GELU(),  # 比ReLU更平滑的激活函数
-                nn.LayerNorm(512),  # 稳定训练过程
-
-                # Layer 2: 512 → 256
-                nn.Linear(512, 256),
-                nn.SiLU(),
-                nn.Dropout(0.3),  # 防止模态特异性过拟合
-
-                # Layer 3: 256 → 2
-                nn.Linear(256, 2)
-            )
+            self.category_classifier = torch.nn.Linear(768, 2)  # Bert base 的H是768
+            # self.category_classifier = nn.Sequential(
+            #     # Layer 1: 768 → 512
+            #     nn.Linear(768, 512),
+            #     nn.GELU(),  # 比ReLU更平滑的激活函数
+            #     nn.LayerNorm(512),  # 稳定训练过程
+            #
+            #     # Layer 2: 512 → 256
+            #     nn.Linear(512, 256),
+            #     nn.SiLU(),
+            #     nn.Dropout(0.3),  # 防止模态特异性过拟合
+            #
+            #     # Layer 3: 256 → 2
+            #     nn.Linear(256, 2)
+            # )
         elif opt["label_type"] == "3_way":
-            # self.category_classifier = torch.nn.Linear(768, 3)  # Bert base 的H是768
-            self.category_classifier = nn.Sequential(
-                # Layer 1: 768 → 512
-                nn.Linear(768, 512),
-                nn.GELU(),  # 比ReLU更平滑的激活函数
-                nn.LayerNorm(512),  # 稳定训练过程
-
-                # Layer 2: 512 → 256
-                nn.Linear(512, 256),
-                nn.SiLU(),
-                nn.Dropout(0.3),  # 防止模态特异性过拟合
-
-                # Layer 3: 256 → 2
-                nn.Linear(256, 3)
-            )
+            self.category_classifier = torch.nn.Linear(768, 3)  # Bert base 的H是768
+            # self.category_classifier = nn.Sequential(
+            #     # Layer 1: 768 → 512
+            #     nn.Linear(768, 512),
+            #     nn.GELU(),  # 比ReLU更平滑的激活函数
+            #     nn.LayerNorm(512),  # 稳定训练过程
+            #
+            #     # Layer 2: 512 → 256
+            #     nn.Linear(512, 256),
+            #     nn.SiLU(),
+            #     nn.Dropout(0.3),  # 防止模态特异性过拟合
+            #
+            #     # Layer 3: 256 → 2
+            #     nn.Linear(256, 3)
+            # )
         else:  # 6_way
-            # self.category_classifier = torch.nn.Linear(768, 6)  # Bert base 的H是768
-            self.category_classifier = nn.Sequential(
-                # Layer 1: 768 → 512
-                nn.Linear(768, 512),
-                nn.GELU(),  # 比ReLU更平滑的激活函数
-                nn.LayerNorm(512),  # 稳定训练过程
-
-                # Layer 2: 512 → 256
-                nn.Linear(512, 256),
-                nn.SiLU(),
-                nn.Dropout(0.3),  # 防止模态特异性过拟合
-
-                # Layer 3: 256 → 2
-                nn.Linear(256, 6)
-            )
+            self.category_classifier = torch.nn.Linear(768, 6)  # Bert base 的H是768
+            # self.category_classifier = nn.Sequential(
+            #     # Layer 1: 768 → 512
+            #     nn.Linear(768, 512),
+            #     nn.GELU(),  # 比ReLU更平滑的激活函数
+            #     nn.LayerNorm(512),  # 稳定训练过程
+            #
+            #     # Layer 2: 512 → 256
+            #     nn.Linear(512, 256),
+            #     nn.SiLU(),
+            #     nn.Dropout(0.3),  # 防止模态特异性过拟合
+            #
+            #     # Layer 3: 256 → 2
+            #     nn.Linear(256, 6)
+            # )
 
     def forward(self, ids, mask, token_type_ids, pixel_values, pixel_values_emo, emo_ids, emo_mask, intent_ids, intent_mask, labels):
         text_outputs = self.text_encoder(ids, attention_mask=mask, token_type_ids=token_type_ids) # 16*768
