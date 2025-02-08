@@ -207,7 +207,7 @@ class Bert_VitClass(torch.nn.Module):
             'visual_sentiment': AutoImageProcessor.from_pretrained("kittendev/visual_emotional_analysis"),
             'intent_detector': AutoTokenizer.from_pretrained("Falconsai/intent_classification" )
         }
-        visual_sa_model = f'{opt["output_path"]}/checkpoint_visSA_model.pth'
+        visual_sa_model = f'{opt["output_path"]}/checkpoint_SA_model.pth'
         checkpoint = torch.load(visual_sa_model)
         self.visual_sentiment.load_state_dict(checkpoint['model'])
 
