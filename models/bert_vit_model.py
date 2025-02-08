@@ -12,6 +12,32 @@ import torch.nn as nn
 from transformers import BertModel, ViTModel, BertTokenizer, ViTImageProcessor, AutoModel, AutoTokenizer, \
     AutoModelForSequenceClassification, AutoImageProcessor, AutoModelForImageClassification
 
+class TextSentimentModel(nn.Module):
+    def __init__(self):
+        super(TextSentimentModel, self).__init__()
+        self.text_sentiment = AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
+        self.category_encoder = torch.nn.Sequential(
+            torch.nn.Linear(768, 768),
+            torch.nn.BatchNorm1d(768),
+            torch.nn.ReLU(),
+
+            torch.nn.Linear(768, 768),
+            torch.nn.BatchNorm1d(768),
+            torch.nn.ReLU(),
+
+            torch.nn.Linear(768, 768),
+            torch.nn.BatchNorm1d(768),
+            torch.nn.ReLU()
+        )
+        self.classifier = torch.nn.Linear(768, 5) # fc
+    def forward(self, input_ids, attention_mask):
+        output = self.text_sentiment(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
+        # print(output.keys())
+        last_hidden_states = output['hidden_states'][-1]
+        txt_emo_embeds = last_hidden_states[:, 0, :]
+        txt_emo_embeds = self.category_encoder(txt_emo_embeds)
+        x=self.classifier(txt_emo_embeds)
+        return x, txt_emo_embeds
 
 class VisualSentimentModel(torch.nn.Module):
     def __init__(self):
@@ -39,9 +65,7 @@ class VisualSentimentModel(torch.nn.Module):
         vis_emo_embeds = self.category_encoder(vis_emo_embeds)
         x = self.classifier(vis_emo_embeds)
         return x,vis_emo_embeds
-# label_list = ['translate', 'transfer', 'timer', 'definition', 'meaning_of_life', 'insurance_change', 'find_phone', 'travel_alert', 'pto_request', 'improve_credit_score', 'fun_fact', 'change_language', 'payday', 'replacement_card_duration', 'time', 'application_status', 'flight_status', 'flip_coin', 'change_user_name', 'where_are_you_from', 'shopping_list_update', 'what_can_i_ask_you', 'maybe', 'oil_change_how', 'restaurant_reservation', 'balance', 'confirm_reservation', 'freeze_account', 'rollover_401k', 'who_made_you', 'distance', 'user_name', 'timezone', 'next_song', 'transactions', 'restaurant_suggestion', 'rewards_balance', 'pay_bill', 'spending_history', 'pto_request_status', 'credit_score', 'new_card', 'lost_luggage', 'repeat', 'mpg', 'oil_change_when', 'yes', 'travel_suggestion', 'insurance', 'todo_list_update', 'reminder', 'change_speed', 'tire_pressure', 'no', 'apr', 'nutrition_info', 'calendar', 'uber', 'calculator', 'date', 'carry_on', 'pto_used', 'schedule_maintenance', 'travel_notification', 'sync_device', 'thank_you', 'roll_dice', 'food_last', 'cook_time', 'reminder_update', 'report_lost_card', 'ingredient_substitution', 'make_call', 'alarm', 'todo_list', 'change_accent', 'w2', 'bill_due', 'calories', 'damaged_card', 'restaurant_reviews', 'routing', 'do_you_have_pets', 'schedule_meeting', 'gas_type', 'plug_type', 'tire_change', 'exchange_rate', 'next_holiday', 'change_volume', 'who_do_you_work_for', 'credit_limit', 'how_busy', 'accept_reservations', 'order_status', 'pin_change', 'goodbye', 'account_blocked', 'what_song', 'international_fees', 'last_maintenance', 'meeting_schedule', 'ingredients_list', 'report_fraud', 'measurement_conversion', 'smart_home', 'book_hotel', 'current_location', 'weather', 'taxes', 'min_payment', 'whisper_mode', 'cancel', 'international_visa', 'vaccines', 'pto_balance', 'directions', 'spelling', 'greeting', 'reset_settings', 'what_is_your_name', 'direct_deposit', 'interest_rate', 'credit_limit_change', 'what_are_your_hobbies', 'book_flight', 'shopping_list', 'text', 'bill_balance', 'share_location', 'redeem_rewards', 'play_music', 'calendar_update', 'are_you_a_bot', 'gas', 'expiration_date', 'update_playlist', 'cancel_reservation', 'tell_joke', 'change_ai_name', 'how_old_are_you', 'car_rental', 'jump_start', 'meal_suggestion', 'recipe', 'income', 'order', 'traffic', 'order_checks', 'card_declined']
-# label2id = {label: i for i, label in enumerate(label_list)}
-# id2label = {i: label for i, label in enumerate(label_list)}
+
 # Model
 class IntentModel(nn.Module):
     def __init__(self):
@@ -169,7 +193,8 @@ class Bert_VitClass(torch.nn.Module):
         super(Bert_VitClass, self).__init__()
         self.text_encoder = BertModel.from_pretrained('bert-base-uncased')  # embedding
         self.img_encoder = ViTModel.from_pretrained('google/vit-base-patch16-224-in21k',num_labels=int(opt['label_type'][0]))
-        self.text_sentiment= AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
+        # self.text_sentiment= AutoModel.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest")
+        self.text_sentiment = TextSentimentModel()
         # self.visual_sentiment= AutoModelForImageClassification.from_pretrained("kittendev/visual_emotional_analysis")
         self.visual_sentiment = VisualSentimentModel()
         # self.intent_detector = AutoModelForSequenceClassification.from_pretrained("bespin-global/klue-roberta-small-3i4k-intent-classification" )
@@ -182,12 +207,18 @@ class Bert_VitClass(torch.nn.Module):
             'visual_sentiment': AutoImageProcessor.from_pretrained("kittendev/visual_emotional_analysis"),
             'intent_detector': AutoTokenizer.from_pretrained("Falconsai/intent_classification" )
         }
-        visual_sa_model = f'{opt["output_path"]}/checkpoint_SA_model.pth'
-        text_intent_model = f'{opt["output_path"]}/checkpoint_intent_model.pth'
+        visual_sa_model = f'{opt["output_path"]}/checkpoint_visSA_model.pth'
         checkpoint = torch.load(visual_sa_model)
         self.visual_sentiment.load_state_dict(checkpoint['model'])
+
+        text_sa_model = f'{opt["output_path"]}/checkpoint_textSA_model.pth'
+        checkpoint = torch.load(text_sa_model)
+        self.visual_sentiment.load_state_dict(checkpoint['model'])
+
+        text_intent_model = f'{opt["output_path"]}/checkpoint_intent_model.pth'
         checkpoint = torch.load(text_intent_model)
         self.intent_detector.load_state_dict(checkpoint['model'])
+
         # print(self.visual_sentiment)
 
         # self.dropout = torch.nn.Dropout(0.3)
@@ -248,17 +279,12 @@ class Bert_VitClass(torch.nn.Module):
         text_lhs = text_outputs.last_hidden_state  # [batch, text_seq_len=100, 768]
         img_lsh = img_outputs.last_hidden_state  # [batch, img_seq_len=197, 768]
 
-        # _, emo_embeds = self.sentiment_model1(input_ids=emo_ids, attention_mask=emo_mask, return_dict=False)
-        txt_emo_output = self.text_sentiment(input_ids=emo_ids, attention_mask=emo_mask, output_hidden_states=True) # 13* 16*100*768
-        _, vis_emo_embeds = self.visual_sentiment(pixel_values=pixel_values_emo)  # 之后试一下用pixel_values
+        # txt_emo_output = self.text_sentiment(input_ids=emo_ids, attention_mask=emo_mask, output_hidden_states=True) # 13* 16*100*768
+        _, txt_emo_embeds = self.text_sentiment(input_ids=emo_ids, attention_mask=emo_mask)
         # vis_emo_output = self.visual_sentiment(pixel_values=pixel_values, output_hidden_states=True) # 之后试一下用pixel_values
+        _, vis_emo_embeds = self.visual_sentiment(pixel_values=pixel_values_emo)
         # txt_intent_output = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask, output_hidden_states=True)
         _, txt_intent_embeds = self.intent_detector(input_ids=intent_ids, attention_mask=intent_mask)
-
-        hidden_states = txt_emo_output['hidden_states']  # 16*100*768
-        last_hidden_states = hidden_states[-1]
-        txt_emo_embeds = last_hidden_states[:, 0, :] # cls token
-
 
         # 计算 文字图片embedding的cross attention 这里拼接之前乘一个可以学习的weight
         text_embeds, img_embeds = text_lhs[:,0,:], img_lsh[:,0,:]
