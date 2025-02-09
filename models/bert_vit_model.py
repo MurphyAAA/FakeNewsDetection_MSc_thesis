@@ -29,7 +29,7 @@ class TextSentimentModel(nn.Module):
             torch.nn.BatchNorm1d(768),
             torch.nn.ReLU()
         )
-        self.classifier = torch.nn.Linear(768, 5) # fc
+        self.classifier = torch.nn.Linear(768, 3) # fc
     def forward(self, input_ids, attention_mask):
         output = self.text_sentiment(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
         # print(output.keys())
