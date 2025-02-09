@@ -205,15 +205,15 @@ class Bert_VitClass(torch.nn.Module):
             'vit': ViTImageProcessor.from_pretrained('google/vit-base-patch16-224-in21k'),
             'text_sentiment': AutoTokenizer.from_pretrained("cardiffnlp/twitter-roberta-base-sentiment-latest"),
             'visual_sentiment': AutoImageProcessor.from_pretrained("kittendev/visual_emotional_analysis"),
-            'intent_detector': AutoTokenizer.from_pretrained("Falconsai/intent_classification" )
+            'intent_detector': AutoTokenizer.from_pretrained("roberta-base" )
         }
-        visual_sa_model = f'{opt["output_path"]}/checkpoint_SA_model.pth'
+        visual_sa_model = f'{opt["output_path"]}/checkpoint_visSA_model.pth'
         checkpoint = torch.load(visual_sa_model)
         self.visual_sentiment.load_state_dict(checkpoint['model'])
 
         text_sa_model = f'{opt["output_path"]}/checkpoint_textSA_model.pth'
         checkpoint = torch.load(text_sa_model)
-        self.visual_sentiment.load_state_dict(checkpoint['model'])
+        self.text_sentiment.load_state_dict(checkpoint['model'])
 
         text_intent_model = f'{opt["output_path"]}/checkpoint_intent_model.pth'
         checkpoint = torch.load(text_intent_model)
