@@ -14,17 +14,17 @@
     <td> f1 </td>
     <td> recall </td>
     <td> precision </td>
-    <td> FNR </td>
+    <td> FPR </td>
     <td> acc </td>
     <td> f1 </td>
     <td> recall </td>
     <td> precision </td>
-    <td> FNR </td>
+    <td> FPR </td>
     <td> acc </td>
     <td> f1 </td>
     <td> recall </td>
     <td> precision </td>
-    <td> FNR </td>
+    <td> FPR </td>
 </tr>
 <tr>
     <td rowspan="2">text</td>
