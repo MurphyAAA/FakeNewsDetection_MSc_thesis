@@ -8,6 +8,7 @@
 import pdb
 
 import torch
+import torch.nn as nn
 import transformers
 from transformers import CLIPModel, CLIPProcessor
 
@@ -24,18 +25,39 @@ class ClipClass(torch.nn.Module):
             self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
 
         # 冻结CLIP模型的参数
-        # for param in self.model.parameters():
-        #     param.requires_grad = False
-        # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        # self.l2 = torch.nn.Linear(512,64) # ***********这一层加不加后面再调整
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # 获取CLIP的输出维度
+        hidden_size = self.clip.config.hidden_size
+
+        # 自定义分类头（可根据需求修改结构）
+
         self.l3 = torch.nn.Dropout(0.2)
-        # self.l4 = torch.nn.Linear(128, 2)
         if opt["label_type"] == "2_way":
-            self.l4 = torch.nn.Linear(1024, 2) # 只有text。没有image 所以临时改成512
+            self.classifier = nn.Sequential(
+                nn.Linear(hidden_size*2, 512),
+                nn.ReLU(),
+                nn.Dropout(0.2),
+                nn.Linear(512, 2)
+            )
+            # self.l4 = torch.nn.Linear(1024, 2) # 只有text。没有image 所以临时改成512
         elif opt["label_type"] == "3_way":
-            self.l4 = torch.nn.Linear(1024, 3)
+            self.classifier = nn.Sequential(
+                nn.Linear(hidden_size*2, 512),
+                nn.ReLU(),
+                nn.Dropout(0.2),
+                nn.Linear(512, 3)
+            )
+            # self.l4 = torch.nn.Linear(1024, 3)
         else:  # 6_way
-            self.l4 = torch.nn.Linear(1024, 6)
+            self.classifier = nn.Sequential(
+                nn.Linear(hidden_size*2, 512),
+                nn.ReLU(),
+                nn.Dropout(0.2),
+                nn.Linear(512, 6)
+            )
+            # self.l4 = torch.nn.Linear(1024, 6)
 
     # def __call__(self, *args, **kwargs):
     #     print("call Bert Class")
@@ -55,5 +77,5 @@ class ClipClass(torch.nn.Module):
         combined_output = torch.cat((text_embeds, img_embeds), dim=1)  # ********** 组合方式也可以调整
         # output_3 = self.l3(combined_output)
         # output_3 = self.l3(img_embeds) # 先只看text embedding 为啥是nan了
-        output = self.l4(combined_output)
+        output = self.classifier(combined_output)
         return output

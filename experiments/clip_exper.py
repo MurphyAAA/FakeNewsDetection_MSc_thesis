@@ -40,12 +40,12 @@ class ClipExperiment:
         self.test_loader = None
 
         self.ent_loss = torch.nn.CrossEntropyLoss()
-        # self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
-        #                                   weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
+        self.optimizer = torch.optim.Adam(params=self.model.classifier.parameters(), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
+                                          weight_decay=0.2)  # Params used from paper, the lr is smaller, more safe for fine tuning to new dataset
 
         # filter(lambda p: p.requires_grad, self.model.parameters()) 从 self.model.parameters()中选择出 p.requires_grad为True的值
-        self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
-                                           weight_decay=0.2)
+        # self.optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.model.parameters()), lr=opt['lr'], betas=(0.9, 0.98), eps=1e-6,
+        #                                    weight_decay=0.2)
         # self.scaler = GradScaler()
         # self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, "min")
 
