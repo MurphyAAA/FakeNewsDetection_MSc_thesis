@@ -29,7 +29,7 @@ class ClipClass(torch.nn.Module):
             param.requires_grad = False
 
         # 获取CLIP的输出维度
-        hidden_size = self.clip.config.hidden_size
+        hidden_size = self.model.config.hidden_size
 
         # 自定义分类头（可根据需求修改结构）
 
