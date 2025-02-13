@@ -101,8 +101,8 @@ class Bert_VitExperiment:
             txt_intent_loss = torch.mean(1 - self.cosine_similarity(text_embeds, txt_intent_embeds))
             feature_alignment_loss = torch.mean(1 - self.cosine_similarity(text_embeds, img_embeds))
             # L = self.w[0] * loss + self.w[1] * feature_alignment_loss + self.w[2] * txt_emo_loss + self.w[3] * vis_emo_loss + self.w[4] * txt_intent_loss
-            L = self.w[0] * loss + self.w[2] * txt_emo_loss + self.w[3] * vis_emo_loss + self.w[4] * txt_intent_loss
-            # L = self.w[0] * loss + self.w[1] * txt_emo_loss
+            # L = self.w[0] * loss + self.w[2] * txt_emo_loss + self.w[3] * vis_emo_loss + self.w[4] * txt_intent_loss
+            L = self.w[0] * loss
             # self.writer.add_scalar(f"loss_{self.opt['label_type']}", L.item(), epoch*len(self.train_loader) + idx)
             # if epoch*len(self.train_loader) + idx % self.opt["log_every"] == 0:
             #     self.writer.add_scalar(f"{self.opt['label_type']}_text_emo_loss", txt_emo_loss.item(), epoch*len(self.train_loader) + idx)
