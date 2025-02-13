@@ -164,14 +164,14 @@ class ClipExperiment:
                 pixel_values = databatch["pixel_values"].to(self.device, dtype=torch.float)
                 label = databatch["label"].to(self.device, dtype=torch.long)
 
-                embedding = self.model(ids, mask, pixel_values)#  , pixel_values
-                # embedding = self.model(pixel_values=pixel_values)#  , pixel_values
-                loss = self.ent_loss(embedding, label)
-                pred = torch.argmax(embedding, dim=-1)
-                tot_loss += loss.item()
-                if _ % self.opt["print_every"] == 0:
-                    print(
-                        f" avg_loss: {tot_loss / (_ + 1)}")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
+                logits = self.model(ids, mask, pixel_values)#  , pixel_values
+                # logits = self.model(pixel_values=pixel_values)#  , pixel_values
+                # loss = self.ent_loss(logits, label)
+                pred = torch.argmax(logits, dim=-1)
+                # tot_loss += loss.item()
+                # if _ % self.opt["print_every"] == 0:
+                #     print(
+                #         f" avg_loss: {tot_loss / (_ + 1)}")  # 打印从训练开始到现在的平均loss，以及最近 "print_every" 次的平均loss
                 fin_label.extend(label.cpu().detach().tolist())
                 fin_output.extend(pred.cpu().detach().tolist())
         return fin_output, fin_label
