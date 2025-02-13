@@ -29,14 +29,14 @@ class ClipClass(torch.nn.Module):
             param.requires_grad = False
 
         # 获取CLIP的输出维度
-        hidden_size = self.model.config.hidden_size
+        # hidden_size = self.model.config.hidden_size
 
         # 自定义分类头（可根据需求修改结构）
 
         self.l3 = torch.nn.Dropout(0.2)
         if opt["label_type"] == "2_way":
             self.classifier = nn.Sequential(
-                nn.Linear(hidden_size*2, 512),
+                nn.Linear(1024, 512),
                 nn.ReLU(),
                 nn.Dropout(0.2),
                 nn.Linear(512, 2)
@@ -44,7 +44,7 @@ class ClipClass(torch.nn.Module):
             # self.l4 = torch.nn.Linear(1024, 2) # 只有text。没有image 所以临时改成512
         elif opt["label_type"] == "3_way":
             self.classifier = nn.Sequential(
-                nn.Linear(hidden_size*2, 512),
+                nn.Linear(1024, 512),
                 nn.ReLU(),
                 nn.Dropout(0.2),
                 nn.Linear(512, 3)
@@ -52,7 +52,7 @@ class ClipClass(torch.nn.Module):
             # self.l4 = torch.nn.Linear(1024, 3)
         else:  # 6_way
             self.classifier = nn.Sequential(
-                nn.Linear(hidden_size*2, 512),
+                nn.Linear(1024, 512),
                 nn.ReLU(),
                 nn.Dropout(0.2),
                 nn.Linear(512, 6)
