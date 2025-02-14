@@ -25,8 +25,8 @@ class ClipClass(torch.nn.Module):
             self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
 
         # 冻结CLIP模型的参数
-        for param in self.model.parameters():
-            param.requires_grad = False
+        # for param in self.model.parameters():
+        #     param.requires_grad = False
 
         # 获取CLIP的输出维度
         # hidden_size = self.model.config.hidden_size
