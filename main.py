@@ -80,7 +80,7 @@ def main(opt):
             num_train_epochs=opt["num_epochs"],
             fp16=True,
             save_strategy='epoch',
-            logging_dir=f'{opt["output_path"]}/vit1_{opt["label_type"]}_new_dataset',
+            logging_dir=f'{opt["output_path"]}/vit2_{opt["label_type"]}',
             logging_steps=opt["print_every"],
             remove_unused_columns=False,
             load_best_model_at_end=True,
@@ -162,13 +162,13 @@ def compute_metrics(eval_pred):
     preds = eval_pred.predictions.argmax(-1)
 
     accuracy = metrics.accuracy_score(labels, preds)
-    # f1 = metrics.f1_score(labels, preds, average=None)
+    f1 = metrics.f1_score(labels, preds, average=None, labels=np.unique(preds))
     f1_macro = metrics.f1_score(labels, preds, average='macro')
 
-    # recall = metrics.recall_score(labels, preds, average=None)
+    recall = metrics.recall_score(labels, preds, average=None, labels=np.unique(preds))
     recall_macro = metrics.recall_score(labels, preds, average="macro")
 
-    # precision = metrics.precision_score(labels, preds, average=None)  # 2_way
+    precision = metrics.precision_score(labels, preds, average=None, labels=np.unique(preds))  # 2_way
     precision_macro = metrics.precision_score(labels, preds, average="macro")
 
     conf_matrix = metrics.confusion_matrix(labels, preds)
@@ -181,10 +181,11 @@ def compute_metrics(eval_pred):
     # FRR = (conf_matrix[1,0]+conf_matrix[2,0]) / (conf_matrix[1,0]+conf_matrix[1,1]+conf_matrix[1,2]+
     #                                              conf_matrix[2,0]+conf_matrix[2,1]+conf_matrix[2,2])
     return {"accuracy": accuracy,
-            "f1_marco": f1_macro,
-            "recall_macro": recall_macro,
-            "precision_macro": precision_macro,
-            "False Positive Rate:": FPR
+            'precision': precision, 'precision_macro': precision_macro,
+            'recall': recall, 'recall_macro': recall_macro,
+            'f1': f1, 'f1_macro': f1_macro,
+            'conf_matrix': conf_matrix,
+            'False Positive Rate': FPR,
             }
 
 
