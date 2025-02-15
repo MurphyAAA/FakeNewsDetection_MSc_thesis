@@ -117,9 +117,10 @@ def main(opt):
             epoch_time, loss = experiment.train(epoch, tot_loss)
             tot_loss = loss
             print(tot_loss)
-            # experiment.save_checkpoint(
-            #     f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
-            # print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
+            if epoch==10 or epoch==12 or epoch==14:
+                experiment.save_checkpoint(
+                    f'{opt["output_path"]}/checkpoint_{opt["model"]}_epoch_{epoch}_{opt["label_type"]}.pth', epoch)
+                print(f"EPOCH:[{epoch}]  EXECUTION TIME: {epoch_time:.2f}s")
         # validation
             predicts, labels = experiment.validation()
             if opt["label_type"] == "2_way":
