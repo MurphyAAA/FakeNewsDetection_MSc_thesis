@@ -225,7 +225,7 @@ class Bert_VitClass(torch.nn.Module):
         self.emotion_layer = torch.nn.Linear(768, 384)
 
         if opt["label_type"] == "2_way":
-            self.category_classifier = torch.nn.Linear(768, 2)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768+768, 2)  # Bert base 的H是768
             # self.category_classifier = nn.Sequential(
             #     # Layer 1: 768 → 512
             #     nn.Linear(768, 512),
@@ -241,7 +241,7 @@ class Bert_VitClass(torch.nn.Module):
             #     nn.Linear(256, 2)
             # )
         elif opt["label_type"] == "3_way":
-            self.category_classifier = torch.nn.Linear(768, 3)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768+768, 3)  # Bert base 的H是768
             # self.category_classifier = nn.Sequential(
             #     # Layer 1: 768 → 512
             #     nn.Linear(768, 512),
@@ -257,7 +257,7 @@ class Bert_VitClass(torch.nn.Module):
             #     nn.Linear(256, 3)
             # )
         else:  # 6_way
-            self.category_classifier = torch.nn.Linear(768, 6)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768+768, 6)  # Bert base 的H是768
             # self.category_classifier = nn.Sequential(
             #     # Layer 1: 768 → 512
             #     nn.Linear(768, 512),
@@ -288,12 +288,12 @@ class Bert_VitClass(torch.nn.Module):
 
         # 计算 文字图片embedding的cross attention 这里拼接之前乘一个可以学习的weight
         text_embeds, img_embeds = text_lhs[:,0,:], img_lsh[:,0,:]
-        # combined_output = torch.cat((text_embeds, img_embeds), dim=1) # 试一下不直接将emotion的embedding拼起来，直接让模型返回text_embed和emo_embed，计算L2loss，让原本的模型得到的text_embed能更好的提取情绪信息 (embedding distillation)
-        # output = self.category_classifier(combined_output)
+        combined_output = torch.cat((text_embeds, img_embeds), dim=1) # 试一下不直接将emotion的embedding拼起来，直接让模型返回text_embed和emo_embed，计算L2loss，让原本的模型得到的text_embed能更好的提取情绪信息 (embedding distillation)
+        output = self.category_classifier(combined_output)
 
         text_embeds2 = text_lhs
         img_embeds2 = img_lsh[:, 1:, :]
-        fused_embed = self.multimodal_block(text_embeds2, img_embeds2)
-        output = self.category_classifier(fused_embed)
+        # fused_embed = self.multimodal_block(text_embeds2, img_embeds2)
+        # output = self.category_classifier(fused_embed)
         return output, text_embeds, img_embeds, txt_emo_embeds, vis_emo_embeds, txt_intent_embeds
 
