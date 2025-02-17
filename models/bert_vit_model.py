@@ -225,7 +225,7 @@ class Bert_VitClass(torch.nn.Module):
         self.emotion_layer = torch.nn.Linear(768, 384)
 
         if opt["label_type"] == "2_way":
-            self.category_classifier = torch.nn.Linear(768+768, 2)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768, 2)  # Bert base 的H是768
             # self.category_classifier = nn.Sequential(
             #     # Layer 1: 768 → 512
             #     nn.Linear(768, 512),
@@ -241,7 +241,7 @@ class Bert_VitClass(torch.nn.Module):
             #     nn.Linear(256, 2)
             # )
         elif opt["label_type"] == "3_way":
-            self.category_classifier = torch.nn.Linear(768+768, 3)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768, 3)  # Bert base 的H是768
             # self.category_classifier = nn.Sequential(
             #     # Layer 1: 768 → 512
             #     nn.Linear(768, 512),
@@ -257,7 +257,7 @@ class Bert_VitClass(torch.nn.Module):
             #     nn.Linear(256, 3)
             # )
         else:  # 6_way
-            self.category_classifier = torch.nn.Linear(768+768, 6)  # Bert base 的H是768
+            self.category_classifier = torch.nn.Linear(768, 6)  # Bert base 的H是768
             # self.category_classifier = nn.Sequential(
             #     # Layer 1: 768 → 512
             #     nn.Linear(768, 512),
